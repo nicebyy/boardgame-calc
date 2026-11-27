@@ -80,6 +80,7 @@ flutter build apk --release
 - `lib/state/boardgame_calc_controller.dart`: 온/오프라인 통합 컨트롤러(`ChangeNotifier`)
 - `lib/widgets/`: 로비, 상단/중앙/하단 패널, 비밀노트, 햄버거 드로어, 모달 7종
 - `assets/audio/`: 로비 배경음악 배치 폴더 (`lobby_bgm.mp3`)
+- `assets/icon/`: Android Adaptive 아이콘 및 Web PWA 아이콘 원본(`app_icon.png`, `app_icon_foreground.png`)
 - `test/`: `local_engine_test.dart`(단위 10건), `lobby_bgm_test.dart`(BGM 단위 4건), `widget_test.dart`(위젯 5건)
 
 ---
