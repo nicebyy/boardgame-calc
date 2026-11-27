@@ -17,6 +17,7 @@ Uint8List buildBoardgamePcmWav({
   required double durationSec,
   double volume = 0.25,
   bool triangle = false,
+  double noiseMix = 0.0,
   int sampleRate = 22050,
 }) {
   final sampleCount = max(1, (sampleRate * durationSec).round());
@@ -45,16 +46,21 @@ Uint8List buildBoardgamePcmWav({
   byteData.setUint32(40, dataSize, Endian.little);
 
   var phase = 0.0;
+  var prevNoise = 0.0;
+  final rng = Random(42);
   for (var i = 0; i < sampleCount; i++) {
     final t = i / sampleCount;
     final freq = startFreq + (endFreq - startFreq) * t;
     phase += (2 * pi * freq) / sampleRate;
     final attack = i < 40 ? i / 40.0 : 1.0;
     final decay = pow(1.0 - t, 1.8).toDouble();
-    final raw = triangle
-        ? (2 / pi) * asin(sin(phase))
-        : sin(phase);
-    final sample = (raw * volume * attack * decay * 32767.0)
+    final rawOsc = triangle ? (2 / pi) * asin(sin(phase)) : sin(phase);
+    final white = rng.nextDouble() * 2 - 1;
+    // 간단한 1차 고역/대역 통과 근사로 종이 바스락 질감 생성
+    final crispNoise = (white - prevNoise * 0.7).clamp(-1.0, 1.0);
+    prevNoise = white;
+    final mixed = rawOsc * (1.0 - noiseMix) + crispNoise * noiseMix;
+    final sample = (mixed * volume * attack * decay * 32767.0)
         .round()
         .clamp(-32768, 32767);
     byteData.setInt16(44 + i * 2, sample, Endian.little);
@@ -91,10 +97,32 @@ Uint8List _getCachedWav(String key) {
         );
       case 'coin':
         return buildBoardgamePcmWav(
-          startFreq: 987.77,
-          endFreq: 1318.51,
+          startFreq: 1318.51,
+          endFreq: 1975.53,
           durationSec: 0.14,
           volume: 0.26,
+        );
+      case 'bet_chip':
+        return buildBoardgamePcmWav(
+          startFreq: 1567.98,
+          endFreq: 2349.32,
+          durationSec: 0.11,
+          volume: 0.25,
+          noiseMix: 0.35,
+        );
+      case 'bid_coin':
+        return buildBoardgamePcmWav(
+          startFreq: 1318.51,
+          endFreq: 2217.46,
+          durationSec: 0.14,
+          volume: 0.26,
+        );
+      case 'refund':
+        return buildBoardgamePcmWav(
+          startFreq: 1567.98,
+          endFreq: 1174.66,
+          durationSec: 0.15,
+          volume: 0.24,
         );
       case 'transfer':
         return buildBoardgamePcmWav(
@@ -130,27 +158,37 @@ Uint8List _getCachedWav(String key) {
         );
       case 'secret_fold':
         return buildBoardgamePcmWav(
-          startFreq: 440,
-          endFreq: 220,
-          durationSec: 0.09,
-          volume: 0.20,
+          startFreq: 160,
+          endFreq: 85,
+          durationSec: 0.095,
+          volume: 0.24,
+          noiseMix: 0.85,
         );
       case 'secret_reveal':
         return buildBoardgamePcmWav(
-          startFreq: 523.25,
-          endFreq: 1046.5,
-          durationSec: 0.18,
-          volume: 0.22,
-          triangle: true,
+          startFreq: 220,
+          endFreq: 320,
+          durationSec: 0.14,
+          volume: 0.26,
+          noiseMix: 0.90,
+        );
+      case 'secret_write':
+        return buildBoardgamePcmWav(
+          startFreq: 260,
+          endFreq: 300,
+          durationSec: 0.06,
+          volume: 0.20,
+          noiseMix: 0.92,
         );
       case 'secret_lock':
       default:
         return buildBoardgamePcmWav(
-          startFreq: 260,
-          endFreq: 120,
-          durationSec: 0.12,
-          volume: 0.24,
+          startFreq: 210,
+          endFreq: 88,
+          durationSec: 0.11,
+          volume: 0.28,
           triangle: true,
+          noiseMix: 0.45,
         );
     }
   });
@@ -182,6 +220,9 @@ void playClickSound(bool enabled) => _playNativeSfx(enabled, 'click');
 void playTabSound(bool enabled) => _playNativeSfx(enabled, 'tab');
 void playModalSound(bool enabled) => _playNativeSfx(enabled, 'modal');
 void playCoinSound(bool enabled) => _playNativeSfx(enabled, 'coin');
+void playBetChipSound(bool enabled) => _playNativeSfx(enabled, 'bet_chip');
+void playBidCoinSound(bool enabled) => _playNativeSfx(enabled, 'bid_coin');
+void playRefundSound(bool enabled) => _playNativeSfx(enabled, 'refund');
 void playTransferSound(bool enabled) => _playNativeSfx(enabled, 'transfer');
 void playAuctionGong(bool enabled) => _playNativeSfx(enabled, 'auction');
 void playWinSound(bool enabled) => _playNativeSfx(enabled, 'win');
@@ -190,5 +231,7 @@ void playSecretNoteFoldSound(bool enabled) =>
     _playNativeSfx(enabled, 'secret_fold');
 void playSecretNoteRevealSound(bool enabled) =>
     _playNativeSfx(enabled, 'secret_reveal');
+void playSecretNoteWriteSound(bool enabled) =>
+    _playNativeSfx(enabled, 'secret_write');
 void playSecretNoteLockSound(bool enabled) =>
     _playNativeSfx(enabled, 'secret_lock');

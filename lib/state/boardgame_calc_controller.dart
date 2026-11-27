@@ -383,11 +383,11 @@ class BoardgameCalcController extends ChangeNotifier {
 
     _socket.onSecretNoteAction = (action) {
       if (action == 'revealed') {
-        BoardgameAudio.playSecretNoteRevealSound(enabled: _soundEnabled);
+        _playSecretSoundDeduped('reveal');
       } else if (action == 'locked') {
-        BoardgameAudio.playSecretNoteLockSound(enabled: _soundEnabled);
-      } else if (action == 'started') {
-        BoardgameAudio.playSecretNoteFoldSound(enabled: _soundEnabled);
+        _playSecretSoundDeduped('lock');
+      } else if (action == 'started' || action == 'reset') {
+        _playSecretSoundDeduped('fold');
       }
     };
 
@@ -399,6 +399,27 @@ class BoardgameCalcController extends ChangeNotifier {
     };
   }
 
+  DateTime? _lastSecretSoundAt;
+  String? _lastSecretSoundKind;
+
+  void _playSecretSoundDeduped(String kind) {
+    final now = DateTime.now();
+    if (_lastSecretSoundKind == kind &&
+        _lastSecretSoundAt != null &&
+        now.difference(_lastSecretSoundAt!).inMilliseconds < 150) {
+      return;
+    }
+    _lastSecretSoundKind = kind;
+    _lastSecretSoundAt = now;
+    if (kind == 'reveal') {
+      BoardgameAudio.playSecretNoteRevealSound(enabled: _soundEnabled);
+    } else if (kind == 'lock') {
+      BoardgameAudio.playSecretNoteLockSound(enabled: _soundEnabled);
+    } else {
+      BoardgameAudio.playSecretNoteFoldSound(enabled: _soundEnabled);
+    }
+  }
+
   void _playSoundForLog(BoardgameCalcLog log) {
     switch (log.type) {
       case LogType.adjust:
@@ -407,22 +428,28 @@ class BoardgameCalcController extends ChangeNotifier {
       case LogType.transfer:
         BoardgameAudio.playTransferSound(enabled: _soundEnabled);
       case LogType.auctionStart:
-      case LogType.auctionBid:
         BoardgameAudio.playAuctionGong(enabled: _soundEnabled);
+      case LogType.auctionBid:
+        BoardgameAudio.playBidCoinSound(enabled: _soundEnabled);
+      case LogType.bettingBet:
+        BoardgameAudio.playBetChipSound(enabled: _soundEnabled);
       case LogType.auctionWin:
       case LogType.bettingWin:
         BoardgameAudio.playWinSound(enabled: _soundEnabled);
+      case LogType.auctionReset:
+      case LogType.bettingReset:
+        BoardgameAudio.playRefundSound(enabled: _soundEnabled);
       case LogType.dice:
         BoardgameAudio.playDiceSound(enabled: _soundEnabled);
       case LogType.secretNote:
         if (log.description.contains('오픈') ||
             log.description.contains('열람')) {
-          BoardgameAudio.playSecretNoteRevealSound(enabled: _soundEnabled);
+          _playSecretSoundDeduped('reveal');
         } else if (log.description.contains('손떼') ||
             log.description.contains('마감')) {
-          BoardgameAudio.playSecretNoteLockSound(enabled: _soundEnabled);
+          _playSecretSoundDeduped('lock');
         } else {
-          BoardgameAudio.playSecretNoteFoldSound(enabled: _soundEnabled);
+          _playSecretSoundDeduped('fold');
         }
       default:
         break;
@@ -1442,11 +1469,13 @@ class BoardgameCalcController extends ChangeNotifier {
           title: title,
           autoReveal: autoReveal,
           onTimerExpire: (expiredRoom) {
-            BoardgameAudio.playSecretNoteRevealSound(enabled: _soundEnabled);
+            _playSecretSoundDeduped(
+              expiredRoom.secretNote?.isRevealed == true ? 'reveal' : 'lock',
+            );
             _syncOfflineRoom(expiredRoom);
           },
         );
-        BoardgameAudio.playSecretNoteFoldSound(enabled: _soundEnabled);
+        _playSecretSoundDeduped('fold');
         _syncOfflineRoom(res.room, log: res.log);
         callback?.call({'success': true});
       } on BoardgameEngineException catch (e) {
@@ -1506,7 +1535,7 @@ class BoardgameCalcController extends ChangeNotifier {
           roomCode: _room!.roomCode,
           hostActorId: _me!.id,
         );
-        BoardgameAudio.playSecretNoteLockSound(enabled: _soundEnabled);
+        _playSecretSoundDeduped('lock');
         _syncOfflineRoom(res.room, log: res.log);
         callback?.call({'success': true});
       } on BoardgameEngineException catch (e) {
@@ -1526,7 +1555,7 @@ class BoardgameCalcController extends ChangeNotifier {
           roomCode: _room!.roomCode,
           hostActorId: _me!.id,
         );
-        BoardgameAudio.playSecretNoteRevealSound(enabled: _soundEnabled);
+        _playSecretSoundDeduped('reveal');
         _syncOfflineRoom(res.room, log: res.log);
         callback?.call({'success': true});
       } on BoardgameEngineException catch (e) {

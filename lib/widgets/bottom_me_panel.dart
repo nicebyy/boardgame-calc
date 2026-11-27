@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../models/boardgame_models.dart';
+import '../services/boardgame_audio.dart';
 import '../theme/boardgame_theme.dart';
 import 'player_avatar.dart';
 
@@ -82,7 +83,10 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                 Tooltip(
                   message: '프로필 사진을 클릭하여 이름 및 색상 변경',
                   child: InkWell(
-                    onTap: onEditProfile,
+                    onTap: () {
+                      BoardgameAudio.playModal();
+                      onEditProfile();
+                    },
                     borderRadius: BorderRadius.circular(999),
                     child: Stack(
                       children: [
@@ -115,7 +119,10 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                 const SizedBox(width: 10),
                 Expanded(
                   child: InkWell(
-                    onTap: onEditProfile,
+                    onTap: () {
+                      BoardgameAudio.playModal();
+                      onEditProfile();
+                    },
                     child: Wrap(
                       crossAxisAlignment: WrapCrossAlignment.center,
                       spacing: 6,
@@ -158,11 +165,10 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                             ),
                             decoration: BoxDecoration(
                               color: BoardgameColors.amberBright
-                                  .withValues(alpha: 0.16),
+                                  .withValues(alpha: 0.22),
                               borderRadius: BorderRadius.circular(6),
                               border: Border.all(
-                                color: BoardgameColors.amberBright
-                                    .withValues(alpha: 0.35),
+                                color: const Color(0x73B45309),
                               ),
                             ),
                             child: const Row(
@@ -171,14 +177,14 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                                 Icon(
                                   Icons.workspace_premium,
                                   size: 11,
-                                  color: BoardgameColors.amberBright,
+                                  color: Color(0xFFB45309),
                                 ),
                                 SizedBox(width: 2),
                                 Text(
                                   '방장',
                                   style: TextStyle(
-                                    color: BoardgameColors.amberScoreText,
-                                    fontWeight: FontWeight.w800,
+                                    color: Color(0xFF6E3A06),
+                                    fontWeight: FontWeight.w900,
                                     fontSize: 10,
                                   ),
                                 ),
@@ -242,7 +248,10 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                     ),
                     if (canAdjustPoints && currencyDenoms.isEmpty)
                       OutlinedButton.icon(
-                        onPressed: onOpenCustomAdjust,
+                        onPressed: () {
+                          BoardgameAudio.playModal();
+                          onOpenCustomAdjust();
+                        },
                         icon: const Icon(Icons.monetization_on_outlined,
                             size: 14),
                         label: const Text(
@@ -378,7 +387,10 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                   ),
                 ),
                 InkWell(
-                  onTap: onOpenCustomAdjust,
+                  onTap: () {
+                    BoardgameAudio.playModal();
+                    onOpenCustomAdjust();
+                  },
                   child: const Text(
                     '직접 금액 입력',
                     style: TextStyle(
