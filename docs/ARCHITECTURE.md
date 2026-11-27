@@ -24,7 +24,7 @@ flowchart TD
 - `lib/models/boardgame_models.dart`: 불변 모델, Enum, 숫자 포맷터(`formatCompactNumber`, `formatCommaNumber`), 정렬 유틸(`sortTopPlayers`), JSON 직렬화/역직렬화.
 - `lib/services/local_boardgame_engine.dart`: NestJS `BoardgameCalcService` 규칙(방 생성/입장, 화폐·승점 단위 재고 차감/반환, P2P 합의 송금, 경매 입찰/충돌 방지/예치금 보호/정산, 배팅 판돈 누적/환불/정산, 주사위 콤보, 비밀노트 마스킹)을 순수 Dart로 구현.
 - `lib/services/boardgame_socket_client.dart`: `socket_io_client` 기반 NestJS `boardgameCalc:*` 이벤트 송수신 클라이언트.
-- `lib/services/boardgame_audio*.dart`: 조건부 import(`dart:js_interop` + `package:web`)를 통한 Web Audio API 신디사이저(효과음 8종) 및 비웹 환경용 스텁.
+- `lib/services/boardgame_audio*.dart`: Web Audio API 신디사이저 및 Android/네이티브 순수 Dart PCM WAV(`PlayerMode.lowLatency`) 기반 버튼 클릭·탭·모달·게임 효과음 11종.
 - `lib/services/lobby_bgm_service.dart`: `audioplayers` 기반 Web/Android 공용 로비 BGM(`assets/audio/lobby_bgm.mp3`) 루프 플레이어 추상화 및 구현체.
 - `lib/state/boardgame_calc_controller.dart`: 온/오프라인 통합 상태 머신, 오프라인 Pass & Play 플레이어 전환, `SharedPreferences` 기반 룸/세션/닉네임/배경음/로비 BGM 설정 자동 저장.
 - `lib/widgets/`:
