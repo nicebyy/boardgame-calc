@@ -212,7 +212,7 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                             decoration: const InputDecoration(
                               isDense: true,
                               labelText: 'Socket.IO 백엔드 URL',
-                              hintText: 'http://localhost:3001',
+                              hintText: BoardgameCalcConstants.defaultServerUrl,
                             ),
                           ),
                         ),

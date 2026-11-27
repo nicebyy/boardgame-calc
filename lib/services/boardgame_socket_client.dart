@@ -8,7 +8,7 @@ typedef AckCallback = void Function(Map<String, dynamic> response);
 /// 원본 `pickban_smulator` NestJS `BoardgameCalcGateway` (`boardgameCalc:*`) 와 1:1 호환되는 Socket.IO 클라이언트.
 class BoardgameSocketClient {
   io.Socket? _socket;
-  String _serverUrl = 'http://localhost:3001';
+  String _serverUrl = BoardgameCalcConstants.defaultServerUrl;
 
   void Function()? onConnect;
   void Function()? onDisconnect;
@@ -36,7 +36,7 @@ class BoardgameSocketClient {
   void connect(String serverUrl) {
     final cleanUrl = serverUrl.trim().isNotEmpty
         ? serverUrl.trim()
-        : 'http://localhost:3001';
+        : BoardgameCalcConstants.defaultServerUrl;
     if (_socket != null && _serverUrl == cleanUrl) {
       if (!_socket!.connected) {
         _socket!.connect();
