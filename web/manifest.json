@@ -1,11 +1,11 @@
 {
-    "name": "boardgame_calc",
-    "short_name": "boardgame_calc",
+    "name": "보드게임 계산기 | Boardgame Calculator",
+    "short_name": "보드게임 계산기",
     "start_url": ".",
     "display": "standalone",
-    "background_color": "#0175C2",
-    "theme_color": "#0175C2",
-    "description": "A new Flutter project.",
+    "background_color": "#2B160C",
+    "theme_color": "#2B160C",
+    "description": "Warm Walnut & Parchment Gold 실시간 보드게임 자산·경매·배팅·비밀노트 계산기",
     "orientation": "portrait-primary",
     "prefer_related_applications": false,
     "icons": [
