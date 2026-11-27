@@ -51,6 +51,7 @@ class BoardgameCalcController extends ChangeNotifier {
   static const _keySortOption = 'boardgame_calc_top_players_sort_option';
   static const _keyBgmEnabled = 'bgcalc_bgm_enabled';
   static const _keyBgmVolume = 'bgcalc_bgm_volume';
+  static const _keySoundEnabled = 'bgcalc_sound_enabled';
   static const _keyOfflineRooms = 'bgcalc_offline_rooms_v1';
   static const _keyOfflineActiveRoom = 'bgcalc_offline_active_room';
   static const _keyOfflineActivePlayer = 'bgcalc_offline_active_player';
@@ -147,6 +148,8 @@ class BoardgameCalcController extends ChangeNotifier {
         TopPlayersSortOption.fromWire(_prefs!.getString(_keySortOption));
     _bgmEnabled = _prefs!.getBool(_keyBgmEnabled) ?? true;
     _bgmVolume = (_prefs!.getDouble(_keyBgmVolume) ?? 0.35).clamp(0.0, 1.0);
+    _soundEnabled = _prefs!.getBool(_keySoundEnabled) ?? true;
+    BoardgameAudio.globalEnabled = _soundEnabled;
 
     final storedMode = _prefs!.getString(_keyMode);
     if (storedMode == 'online') {
@@ -483,11 +486,17 @@ class BoardgameCalcController extends ChangeNotifier {
 
   void setSoundEnabled(bool enabled) {
     _soundEnabled = enabled;
+    BoardgameAudio.globalEnabled = enabled;
+    _prefs?.setBool(_keySoundEnabled, enabled);
+    if (enabled) BoardgameAudio.playClick(enabled: true);
     notifyListeners();
   }
 
   void toggleSound() {
     _soundEnabled = !_soundEnabled;
+    BoardgameAudio.globalEnabled = _soundEnabled;
+    _prefs?.setBool(_keySoundEnabled, _soundEnabled);
+    if (_soundEnabled) BoardgameAudio.playClick(enabled: true);
     notifyListeners();
   }
 
@@ -567,12 +576,14 @@ class BoardgameCalcController extends ChangeNotifier {
   }
 
   void setTopPlayersViewMode(TopPlayersViewMode viewMode) {
+    BoardgameAudio.playTab();
     _topPlayersViewMode = viewMode;
     _prefs?.setString(_keyViewMode, viewMode.wireValue);
     notifyListeners();
   }
 
   void setTopPlayersSortOption(TopPlayersSortOption sortOption) {
+    BoardgameAudio.playTab();
     _topPlayersSortOption = sortOption;
     _prefs?.setString(_keySortOption, sortOption.wireValue);
     notifyListeners();
@@ -589,6 +600,7 @@ class BoardgameCalcController extends ChangeNotifier {
       return;
     }
 
+    BoardgameAudio.playTab();
     _mode = nextMode;
     await _prefs?.setString(
         _keyMode, nextMode == ConnectionMode.online ? 'online' : 'offline');
@@ -848,6 +860,7 @@ class BoardgameCalcController extends ChangeNotifier {
     if (_mode != ConnectionMode.offline || _room == null) return;
     final rawRoom = _localEngine.getRoom(_room!.roomCode);
     if (rawRoom == null) return;
+    BoardgameAudio.playTab();
     _syncOfflineRoom(rawRoom, overrideMe: target);
   }
 

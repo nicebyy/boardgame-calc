@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/boardgame_models.dart';
+import '../../services/boardgame_audio.dart';
 import '../../theme/boardgame_theme.dart';
 
 Future<void> showBoardgameConsentModal(
@@ -40,6 +41,7 @@ class _ConsentDialogState extends State<_ConsentDialog> {
 
   void _handle(bool accept) {
     if (_responding) return;
+    if (!accept) BoardgameAudio.playClick();
     setState(() => _responding = true);
     widget.onRespond(widget.request.requestId, accept);
     Navigator.of(context).pop();

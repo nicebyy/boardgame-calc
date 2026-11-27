@@ -1,30 +1,92 @@
+import 'package:flutter/foundation.dart';
+
 import 'boardgame_audio_stub.dart'
     if (dart.library.js_interop) 'boardgame_audio_web.dart' as impl;
 
 class BoardgameAudio {
   BoardgameAudio._();
 
-  static void playCoinSound({bool enabled = true}) =>
-      impl.playCoinSound(enabled);
+  static bool globalEnabled = true;
 
-  static void playTransferSound({bool enabled = true}) =>
-      impl.playTransferSound(enabled);
+  @visibleForTesting
+  static void Function(String event)? debugObserver;
 
-  static void playAuctionGong({bool enabled = true}) =>
-      impl.playAuctionGong(enabled);
+  static bool _resolve(bool? enabled) => enabled ?? globalEnabled;
 
-  static void playWinSound({bool enabled = true}) =>
-      impl.playWinSound(enabled);
+  static void playClick({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('click');
+    impl.playClickSound(active);
+  }
 
-  static void playDiceSound({bool enabled = true}) =>
-      impl.playDiceSound(enabled);
+  static void playTab({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('tab');
+    impl.playTabSound(active);
+  }
 
-  static void playSecretNoteFoldSound({bool enabled = true}) =>
-      impl.playSecretNoteFoldSound(enabled);
+  static void playModal({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('modal');
+    impl.playModalSound(active);
+  }
 
-  static void playSecretNoteRevealSound({bool enabled = true}) =>
-      impl.playSecretNoteRevealSound(enabled);
+  static void playCoinSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('coin');
+    impl.playCoinSound(active);
+  }
 
-  static void playSecretNoteLockSound({bool enabled = true}) =>
-      impl.playSecretNoteLockSound(enabled);
+  static void playTransferSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('transfer');
+    impl.playTransferSound(active);
+  }
+
+  static void playAuctionGong({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('auction_gong');
+    impl.playAuctionGong(active);
+  }
+
+  static void playWinSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('win');
+    impl.playWinSound(active);
+  }
+
+  static void playDiceSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('dice');
+    impl.playDiceSound(active);
+  }
+
+  static void playSecretNoteFoldSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('secret_fold');
+    impl.playSecretNoteFoldSound(active);
+  }
+
+  static void playSecretNoteRevealSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('secret_reveal');
+    impl.playSecretNoteRevealSound(active);
+  }
+
+  static void playSecretNoteLockSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('secret_lock');
+    impl.playSecretNoteLockSound(active);
+  }
 }
