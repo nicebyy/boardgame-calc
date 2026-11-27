@@ -1,30 +1,166 @@
-// This is a basic Flutter widget test.
-//
-// To perform an interaction with a widget in your test, use the WidgetTester
-// utility in the flutter_test package. For example, you can send tap and scroll
-// gestures. You can also use WidgetTester to find child widgets in the widget
-// tree, read text, and verify that the values of widget properties are correct.
-
+import 'package:boardgame_calc/main.dart';
+import 'package:boardgame_calc/models/boardgame_models.dart';
+import 'package:boardgame_calc/state/boardgame_calc_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
-
-import 'package:boardgame_calc/main.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  setUp(() {
+    SharedPreferences.setMockInitialValues({});
+  });
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
+  Future<BoardgameCalcController> pumpInitializedApp(
+    WidgetTester tester, {
+    Size surfaceSize = const Size(1280, 960),
+  }) async {
+    tester.view.physicalSize = surfaceSize;
+    tester.view.devicePixelRatio = 1.0;
+    addTearDown(tester.view.resetPhysicalSize);
+    addTearDown(tester.view.resetDevicePixelRatio);
 
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
+    final controller = BoardgameCalcController();
+    await controller.init();
+    addTearDown(controller.dispose);
 
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    await tester.pumpWidget(BoardgameCalcApp(controller: controller));
+    await tester.pumpAndSettle();
+    return controller;
+  }
+
+  testWidgets('Lobby renders Offline mode toggle and creates offline room into 3-tier arena',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(tester);
+
+    expect(find.text('보드게임 계산기'), findsOneWidget);
+    expect(controller.isOfflineMode, isTrue);
+
+    // Switch to create room tab & submit
+    await tester.tap(find.text('새 공개방 만들기').first);
+    await tester.pumpAndSettle();
+
+    final createSubmit = find.text('공개방 생성하고 게임 시작');
+    await tester.ensureVisible(createSubmit);
+    await tester.pumpAndSettle();
+    await tester.tap(createSubmit);
+    await tester.pumpAndSettle();
+
+    expect(controller.room, isNotNull);
+    expect(find.text('오프라인'), findsOneWidget);
+    expect(find.text('메뉴'), findsOneWidget);
+  });
+
+  testWidgets('BottomMePanel adjusts points and shows denomination depletion',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(tester);
+    controller.createRoom(
+      nickname: '방장테스트',
+      title: '화폐 테스트방',
+      settings: const BoardgameCalcSettings(
+        currencyUnit: '골드',
+        initialPoints: 1000,
+        enableScore: true,
+        initialScore: 0,
+        currencyDenominations: [
+          BoardgameCalcDenomination(value: 100, maxCount: 1, remainingCount: 1),
+          BoardgameCalcDenomination(value: 500),
+        ],
+      ),
+    );
+    await tester.pumpAndSettle();
+
+    expect(find.text('1,000 골드'), findsWidgets);
+
+    // Tap + icon inside the '100' denomination chip in BottomMePanel
+    final chip100Row = find.ancestor(
+      of: find.text('100'),
+      matching: find.byType(Row),
+    );
+    expect(chip100Row, findsWidgets);
+    final plus100Finder = find.descendant(
+      of: chip100Row.first,
+      matching: find.byIcon(Icons.add),
+    );
+    expect(plus100Finder, findsOneWidget);
+    await tester.ensureVisible(plus100Finder);
+    await tester.tap(plus100Finder);
+    await tester.pumpAndSettle();
+
+    expect(controller.me!.points, 1100);
+    expect(controller.room!.settings.currencyDenominations.first.remainingCount, 0);
+    // Remaining badge should now show 0/1
+    expect(find.textContaining('0/1'), findsOneWidget);
+  });
+
+  testWidgets('Hamburger drawer switches center tools (Dice & SecretNote)',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(tester);
+    controller.createRoom(nickname: '호스트', title: '도구 전환 테스트');
+    await tester.pumpAndSettle();
+
+    // Open menu drawer
+    await tester.tap(find.text('메뉴'));
+    await tester.pumpAndSettle();
+
+    expect(find.text('✨ 중앙 보드판 도구 꺼내기'), findsOneWidget);
+
+    // Select Dice roller
+    final diceBtn = find.text('🎲 주사위 롤러');
+    await tester.ensureVisible(diceBtn);
+    await tester.tap(diceBtn);
+    await tester.pumpAndSettle();
+
+    expect(controller.room!.centerTool, CenterToolType.dice);
+    expect(find.textContaining('주사위'), findsWidgets);
+
+    // Open menu again & switch to SecretNote
+    await tester.tap(find.text('메뉴'));
+    await tester.pumpAndSettle();
+    final secretNoteBtn = find.textContaining('비밀노트').first;
+    await tester.ensureVisible(secretNoteBtn);
+    await tester.tap(secretNoteBtn);
+    await tester.pumpAndSettle();
+
+    expect(controller.room!.centerTool, CenterToolType.secretNote);
+  });
+
+  testWidgets('Offline Pass & Play switches players and handles P2P consent modal',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(tester);
+    controller.createRoom(
+      nickname: '플레이어A',
+      title: '패스앤플레이 테스트',
+      settings: const BoardgameCalcSettings(
+        currencyUnit: '원',
+        initialPoints: 2000,
+      ),
+    );
+    controller.addLocalPlayer('플레이어B');
+    await tester.pumpAndSettle();
+
+    expect(controller.room!.players.length, 2);
+    final pA = controller.room!.players[0];
+    final pB = controller.room!.players[1];
+
+    // Switch active player to pA and request transfer to pB
+    controller.switchActiveLocalPlayer(pA);
+    controller.requestTransfer(pB.id, 500, memo: '월급');
+    await tester.pumpAndSettle();
+
+    expect(controller.sentTransferRequest, isNotNull);
+
+    // Switch active player to pB -> consent modal pops up
+    controller.switchActiveLocalPlayer(pB);
+    await tester.pumpAndSettle();
+
+    expect(controller.pendingConsentRequest, isNotNull);
+    expect(find.text('P2P 포인트 합의 요청'), findsOneWidget);
+
+    // Accept transfer
+    await tester.tap(find.text('수락 (받기)'));
+    await tester.pumpAndSettle();
+
+    expect(controller.room!.players[0].points, 1500);
+    expect(controller.room!.players[1].points, 2500);
   });
 }
