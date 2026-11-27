@@ -43,5 +43,5 @@ flowchart TD
    - 로비 또는 상단/사이드 메뉴에서 로컬 플레이어를 추가하고 1인 기기에서 활성 플레이어를 전환(Pass & Play)할 수 있습니다.
    - `SharedPreferences`에 로컬 룸 전체 상태와 활성 플레이어 세션이 직렬화되어 새로고침 후에도 유지됩니다.
 2. **Online Mode**:
-   - 설정된 Socket.IO 서버(`기본값: http://localhost:3001`)에 연결해 `boardgameCalc:*` 이벤트를 주고받습니다.
+   - 설정된 Socket.IO 서버(`기본값: https://1234banpick.me`)에 연결해 `boardgameCalc:*` 이벤트를 주고받습니다.
    - 비밀노트는 서버(또는 로컬 엔진의 `getSanitizedRoomForPlayer`)에서 공개 전 타인의 텍스트를 마스킹하여 전달받습니다.

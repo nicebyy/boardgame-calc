@@ -61,7 +61,7 @@ class BoardgameCalcController extends ChangeNotifier {
   SharedPreferences? _prefs;
 
   ConnectionMode _mode;
-  String _serverUrl = 'http://localhost:3001';
+  String _serverUrl = BoardgameCalcConstants.defaultServerUrl;
   String _sessionId = '';
   String _savedNickname = '플레이어1';
   String _savedAvatarColor = '#3b82f6';
@@ -139,7 +139,8 @@ class BoardgameCalcController extends ChangeNotifier {
     _sessionId = sid;
     _savedNickname = _prefs!.getString(_keyNickname) ?? '플레이어1';
     _savedAvatarColor = _prefs!.getString(_keyAvatarColor) ?? '#3b82f6';
-    _serverUrl = _prefs!.getString(_keyServerUrl) ?? 'http://localhost:3001';
+    _serverUrl =
+        _prefs!.getString(_keyServerUrl) ?? BoardgameCalcConstants.defaultServerUrl;
     _topPlayersViewMode =
         TopPlayersViewMode.fromWire(_prefs!.getString(_keyViewMode));
     _topPlayersSortOption =
