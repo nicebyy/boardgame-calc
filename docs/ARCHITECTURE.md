@@ -12,6 +12,7 @@ flowchart TD
   Ctrl -->|"Offline / Pass & Play Mode"| Engine["LocalBoardgameEngine (Pure Dart Business Logic)"]
   Ctrl -->|"Online Multiplayer Mode"| Socket["BoardgameSocketClient (Socket.IO Client)"]
   Ctrl --> Audio["BoardgameAudio (Web Audio API Synth / Stub)"]
+  Ctrl --> Bgm["LobbyBgmPlayer (audioplayers Web & Android)"]
   Ctrl --> Prefs["SharedPreferences Persistence"]
   Socket <-->|"boardgameCalc:* Events"| NestJS["NestJS BoardgameCalcGateway (Optional Backend)"]
 ```
@@ -24,9 +25,10 @@ flowchart TD
 - `lib/services/local_boardgame_engine.dart`: NestJS `BoardgameCalcService` 규칙(방 생성/입장, 화폐·승점 단위 재고 차감/반환, P2P 합의 송금, 경매 입찰/충돌 방지/예치금 보호/정산, 배팅 판돈 누적/환불/정산, 주사위 콤보, 비밀노트 마스킹)을 순수 Dart로 구현.
 - `lib/services/boardgame_socket_client.dart`: `socket_io_client` 기반 NestJS `boardgameCalc:*` 이벤트 송수신 클라이언트.
 - `lib/services/boardgame_audio*.dart`: 조건부 import(`dart:js_interop` + `package:web`)를 통한 Web Audio API 신디사이저(효과음 8종) 및 비웹 환경용 스텁.
-- `lib/state/boardgame_calc_controller.dart`: 온/오프라인 통합 상태 머신, 오프라인 Pass & Play 플레이어 전환, `SharedPreferences` 기반 룸/세션/닉네임/배경음 자동 저장.
+- `lib/services/lobby_bgm_service.dart`: `audioplayers` 기반 Web/Android 공용 로비 BGM(`assets/audio/lobby_bgm.mp3`) 루프 플레이어 추상화 및 구현체.
+- `lib/state/boardgame_calc_controller.dart`: 온/오프라인 통합 상태 머신, 오프라인 Pass & Play 플레이어 전환, `SharedPreferences` 기반 룸/세션/닉네임/배경음/로비 BGM 설정 자동 저장.
 - `lib/widgets/`:
-  - `lobby_view.dart`: 온/오프라인 모드 전환, 공개방 검색/입장, 방 생성(초기 포인트, 권한, 단위 설정).
+  - `lobby_view.dart`: 온/오프라인 모드 전환, 로비 BGM ON/OFF·볼륨 컨트롤, 공개방 검색/입장, 방 생성(초기 포인트, 권한, 단위 설정).
   - `top_players_bar.dart`: 카드형/리스트형 플레이어 현황 및 실시간 정렬, 오프라인 Pass & Play 전환.
   - `middle_board_panel.dart`: 플레이어 메인 보드, 주사위 롤러(2D 테이블 애니메이션 + 콤보), 배팅 판돈, 실시간 경매.
   - `secret_note_panel.dart`: 비밀 작성/접기/강제잠금/전체공개/리셋.

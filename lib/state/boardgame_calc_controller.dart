@@ -8,6 +8,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../models/boardgame_models.dart';
 import '../services/boardgame_audio.dart';
 import '../services/boardgame_socket_client.dart';
+import '../services/lobby_bgm_service.dart';
 import '../services/local_boardgame_engine.dart';
 
 enum ConnectionMode {
@@ -31,9 +32,11 @@ class BoardgameCalcController extends ChangeNotifier {
   BoardgameCalcController({
     LocalBoardgameEngine? localEngine,
     BoardgameSocketClient? socketClient,
+    LobbyBgmPlayer? bgmPlayer,
     ConnectionMode initialMode = ConnectionMode.offline,
   })  : _localEngine = localEngine ?? LocalBoardgameEngine(),
         _socket = socketClient ?? BoardgameSocketClient(),
+        _bgmPlayer = bgmPlayer ?? AudioplayersLobbyBgmPlayer(),
         _mode = initialMode {
     _bindSocketCallbacks();
   }
@@ -46,12 +49,15 @@ class BoardgameCalcController extends ChangeNotifier {
   static const _keyMode = 'bgcalc_connection_mode';
   static const _keyViewMode = 'boardgame_calc_top_players_view_mode';
   static const _keySortOption = 'boardgame_calc_top_players_sort_option';
+  static const _keyBgmEnabled = 'bgcalc_bgm_enabled';
+  static const _keyBgmVolume = 'bgcalc_bgm_volume';
   static const _keyOfflineRooms = 'bgcalc_offline_rooms_v1';
   static const _keyOfflineActiveRoom = 'bgcalc_offline_active_room';
   static const _keyOfflineActivePlayer = 'bgcalc_offline_active_player';
 
   final LocalBoardgameEngine _localEngine;
   final BoardgameSocketClient _socket;
+  final LobbyBgmPlayer _bgmPlayer;
   SharedPreferences? _prefs;
 
   ConnectionMode _mode;
@@ -67,6 +73,12 @@ class BoardgameCalcController extends ChangeNotifier {
   bool _isLoadingRooms = false;
   String? _error;
   bool _soundEnabled = true;
+
+  bool _bgmEnabled = true;
+  double _bgmVolume = 0.35;
+  LobbyBgmStatus _bgmStatus = LobbyBgmStatus.disabled;
+  bool? _lastBgmInGame;
+  bool _disposed = false;
 
   BoardgameCalcTransferRequest? _pendingConsentRequest;
   BoardgameCalcTransferRequest? _sentTransferRequest;
@@ -97,6 +109,9 @@ class BoardgameCalcController extends ChangeNotifier {
   bool get isLoadingRooms => _isLoadingRooms;
   String? get error => _error;
   bool get soundEnabled => _soundEnabled;
+  bool get bgmEnabled => _bgmEnabled;
+  double get bgmVolume => _bgmVolume;
+  LobbyBgmStatus get bgmStatus => _bgmStatus;
 
   BoardgameCalcTransferRequest? get pendingConsentRequest =>
       _pendingConsentRequest;
@@ -129,6 +144,8 @@ class BoardgameCalcController extends ChangeNotifier {
         TopPlayersViewMode.fromWire(_prefs!.getString(_keyViewMode));
     _topPlayersSortOption =
         TopPlayersSortOption.fromWire(_prefs!.getString(_keySortOption));
+    _bgmEnabled = _prefs!.getBool(_keyBgmEnabled) ?? true;
+    _bgmVolume = (_prefs!.getDouble(_keyBgmVolume) ?? 0.35).clamp(0.0, 1.0);
 
     final storedMode = _prefs!.getString(_keyMode);
     if (storedMode == 'online') {
@@ -174,11 +191,14 @@ class BoardgameCalcController extends ChangeNotifier {
           }
         }
       }
+      _lastBgmInGame = _room != null;
       notifyListeners();
     } else {
       _socket.connect(_serverUrl);
+      _lastBgmInGame = _room != null;
       notifyListeners();
     }
+    await _syncLobbyBgmState(force: true);
   }
 
   Future<void> _persistOfflineState() async {
@@ -468,6 +488,81 @@ class BoardgameCalcController extends ChangeNotifier {
   void toggleSound() {
     _soundEnabled = !_soundEnabled;
     notifyListeners();
+  }
+
+  Future<void> toggleBgm() async {
+    _bgmEnabled = !_bgmEnabled;
+    await _prefs?.setBool(_keyBgmEnabled, _bgmEnabled);
+    await _syncLobbyBgmState(force: true);
+  }
+
+  Future<void> setBgmVolume(double volume) async {
+    _bgmVolume = volume.clamp(0.0, 1.0).toDouble();
+    await _prefs?.setDouble(_keyBgmVolume, _bgmVolume);
+    await _bgmPlayer.setVolume(_bgmVolume);
+    if (!_disposed) super.notifyListeners();
+  }
+
+  Future<void> resumeBgmOnGesture() async {
+    if (_disposed || !_bgmEnabled || _room != null) return;
+    await _syncLobbyBgmState(force: true);
+  }
+
+  Future<void> _syncLobbyBgmState({bool force = false}) async {
+    if (_disposed) return;
+    final inGame = _room != null;
+    if (!force && _lastBgmInGame == inGame) return;
+    _lastBgmInGame = inGame;
+
+    if (inGame) {
+      await _bgmPlayer.stop();
+      if (_disposed) return;
+      _bgmStatus = LobbyBgmStatus.pausedInGame;
+      super.notifyListeners();
+      return;
+    }
+
+    if (!_bgmEnabled) {
+      await _bgmPlayer.stop();
+      if (_disposed) return;
+      _bgmStatus = LobbyBgmStatus.disabled;
+      super.notifyListeners();
+      return;
+    }
+
+    final exists =
+        await _bgmPlayer.hasAsset(AudioplayersLobbyBgmPlayer.defaultBundlePath);
+    if (_disposed) return;
+    if (!exists) {
+      await _bgmPlayer.stop();
+      if (_disposed) return;
+      _bgmStatus = LobbyBgmStatus.missingAsset;
+      super.notifyListeners();
+      return;
+    }
+
+    try {
+      await _bgmPlayer.playAsset(
+        AudioplayersLobbyBgmPlayer.defaultAssetSourcePath,
+        volume: _bgmVolume,
+      );
+      if (_disposed) return;
+      _bgmStatus = LobbyBgmStatus.playing;
+    } catch (_) {
+      if (_disposed) return;
+      _bgmStatus = LobbyBgmStatus.needsUserGesture;
+    }
+    super.notifyListeners();
+  }
+
+  @override
+  void notifyListeners() {
+    if (_disposed) return;
+    super.notifyListeners();
+    final inGame = _room != null;
+    if (_lastBgmInGame != inGame) {
+      unawaited(_syncLobbyBgmState());
+    }
   }
 
   void setTopPlayersViewMode(TopPlayersViewMode viewMode) {
@@ -1466,12 +1561,14 @@ class BoardgameCalcController extends ChangeNotifier {
 
   @override
   void dispose() {
+    _disposed = true;
     _diceToastTimer?.cancel();
     _transferToastTimer?.cancel();
     _conflictToastTimer?.cancel();
     _errorTimer?.cancel();
     _localEngine.dispose();
     _socket.disconnect();
+    unawaited(_bgmPlayer.dispose());
     super.dispose();
   }
 }
