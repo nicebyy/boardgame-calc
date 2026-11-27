@@ -247,4 +247,19 @@ void main() {
     final middleRect = tester.getRect(find.byType(BoardgameCalcMiddleAuction));
     expect(middleRect.height, greaterThan(200));
   });
+
+  testWidgets('Empty center tool keeps player board top-aligned directly below header',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(
+      tester,
+      surfaceSize: const Size(390, 844),
+    );
+    controller.createRoom(nickname: 'P1', title: '상단 정렬 테스트방');
+    controller.addLocalPlayer('P2');
+    await tester.pumpAndSettle();
+
+    expect(controller.room!.centerTool, CenterToolType.empty);
+    final middleRect = tester.getRect(find.byType(BoardgameCalcMiddleAuction));
+    expect(middleRect.top, lessThan(140));
+  });
 }

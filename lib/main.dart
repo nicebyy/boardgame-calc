@@ -190,42 +190,44 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
                                         ),
                                         const SizedBox(height: 8),
                                       ],
-                                    ],
-                                  ),
 
-                                  // 2단: 중앙 보드판 / 도구 (모바일·키보드 오픈 시에도 찌그러지지 않음)
-                                  BoardgameCalcMiddleAuction(
-                                    room: room,
-                                    me: me,
-                                    activeTool: activeTool,
-                                    viewMode: c.topPlayersViewMode,
-                                    onViewModeChange: c.setTopPlayersViewMode,
-                                    sortOption: c.topPlayersSortOption,
-                                    onSortOptionChange:
-                                        c.setTopPlayersSortOption,
-                                    onSelectTool: c.setCenterTool,
-                                    onTapPlayer: (p) => _openPlayerActionModal(
-                                        c, room, me, p),
-                                    onStartAuction: c.startAuction,
-                                    onPlaceBid: c.placeBid,
-                                    onDesignateWinner:
-                                        c.designateAuctionWinner,
-                                    onResetAuction: c.resetAuction,
-                                    onPlaceBet: c.placeBet,
-                                    onResolveBettingWinner:
-                                        c.resolveBettingWinner,
-                                    onResetBettingPot: c.resetBettingPot,
-                                    onRollDice: c.rollDice,
-                                    onStartSecretNote: c.startSecretNote,
-                                    onUpdateSecretNote: c.updateSecretNote,
-                                    onLockSecretNote: c.lockSecretNote,
-                                    onRevealSecretNote: c.revealSecretNote,
-                                    onResetSecretNote: c.resetSecretNote,
-                                    auctionConflictToast:
-                                        c.auctionConflictToast,
-                                    onClearConflictToast:
-                                        c.clearAuctionConflictToast,
-                                    soundEnabled: c.soundEnabled,
+                                      // 2단: 중앙 보드판 / 도구 (빈 상태에서는 상단 바로 아래에 배치)
+                                      BoardgameCalcMiddleAuction(
+                                        room: room,
+                                        me: me,
+                                        activeTool: activeTool,
+                                        viewMode: c.topPlayersViewMode,
+                                        onViewModeChange:
+                                            c.setTopPlayersViewMode,
+                                        sortOption: c.topPlayersSortOption,
+                                        onSortOptionChange:
+                                            c.setTopPlayersSortOption,
+                                        onSelectTool: c.setCenterTool,
+                                        onTapPlayer: (p) =>
+                                            _openPlayerActionModal(
+                                                c, room, me, p),
+                                        onStartAuction: c.startAuction,
+                                        onPlaceBid: c.placeBid,
+                                        onDesignateWinner:
+                                            c.designateAuctionWinner,
+                                        onResetAuction: c.resetAuction,
+                                        onPlaceBet: c.placeBet,
+                                        onResolveBettingWinner:
+                                            c.resolveBettingWinner,
+                                        onResetBettingPot: c.resetBettingPot,
+                                        onRollDice: c.rollDice,
+                                        onStartSecretNote: c.startSecretNote,
+                                        onUpdateSecretNote: c.updateSecretNote,
+                                        onLockSecretNote: c.lockSecretNote,
+                                        onRevealSecretNote: c.revealSecretNote,
+                                        onResetSecretNote: c.resetSecretNote,
+                                        auctionConflictToast:
+                                            c.auctionConflictToast,
+                                        onClearConflictToast:
+                                            c.clearAuctionConflictToast,
+                                        soundEnabled: c.soundEnabled,
+                                      ),
+                                    ],
                                   ),
 
                                   Padding(
