@@ -23,18 +23,19 @@
    - **💰 배팅 판돈 & 모인 돈**: 경매와 독립된 테이블 팟, 플레이어별 누적 배팅 집계·점유율, 4분할 빠른 배팅, 승자 지급 및 전액 환불/초기화.
    - **🔨 실시간 경매**: 최소 입찰단위, 카운트다운 타이머 & 입찰 시 자동 시간 연장, 낙관적 동시성 충돌 감지, 자가 중복 입찰 방지, 즉시 낙찰(대금 차감/팟 지급).
    - **📝 비밀노트**: 라운드/주제/제한시간(`30/60/90/120/무제한`) 및 자동 오픈 설정, 개인 화면 가리기(덮기/펼치기), 방장 `✋ 손떼`(잠금) / `📖 오픈`(공개) / `새 라운드`, 미오픈 시 타인 내용 마스킹.
-6. **실시간 게임 로그 & Web Audio API 효과음**
+6. **실시간 게임 로그 & Web Audio API 효과음 / 로비 BGM**
    - 8종 카테고리 필터(`전체`, `화폐`, `승점`, `경매`, `배팅`, `주사위`, `비밀노트`, `기타/설정`) 로그 모달.
    - 외부 오디오 파일 0KB Web Audio API 합성 효과음 8종 (`ON/MUTE` 토글).
+   - **로비 BGM 플레이어**: `assets/audio/lobby_bgm.mp3` 배치 시 웹·Android 로비에서 자동 루프 재생(ON/OFF·볼륨 조절, 인게임 진입 시 자동 정지 및 로비 복귀 시 재개).
 
 ---
 
 ## 🛠️ 기술 스택 및 요구사항
 
-- **Framework**: Flutter 3.50+ (Web) / Dart 3.14+
+- **Framework**: Flutter 3.50+ (Web / Android) / Dart 3.14+
 - **State & Storage**: `provider`, `shared_preferences`
 - **Realtime**: `socket_io_client` (NestJS Socket.IO v4 호환)
-- **Web Audio**: `package:web` (`AudioContext` 경량 신디사이저)
+- **Web Audio & BGM**: `package:web` (`AudioContext` 경량 신디사이저) + `audioplayers` (`assets/audio/lobby_bgm.mp3` 크로스 플랫폼 루프)
 
 ---
 
@@ -75,9 +76,11 @@ flutter build apk --release
 - `lib/services/local_boardgame_engine.dart`: 순수 Dart 오프라인/Pass & Play 게임 엔진
 - `lib/services/boardgame_socket_client.dart`: NestJS `boardgameCalc:*` Socket.IO 클라이언트
 - `lib/services/boardgame_audio*.dart`: Web Audio API 0KB 합성 효과음 및 플랫폼 스텁
+- `lib/services/lobby_bgm_service.dart`: `audioplayers` 기반 Web/Android 로비 BGM 플레이어
 - `lib/state/boardgame_calc_controller.dart`: 온/오프라인 통합 컨트롤러(`ChangeNotifier`)
 - `lib/widgets/`: 로비, 상단/중앙/하단 패널, 비밀노트, 햄버거 드로어, 모달 7종
-- `test/`: `local_engine_test.dart`(단위 테스트 10건), `widget_test.dart`(위젯 테스트 4건)
+- `assets/audio/`: 로비 배경음악 배치 폴더 (`lobby_bgm.mp3`)
+- `test/`: `local_engine_test.dart`(단위 10건), `lobby_bgm_test.dart`(BGM 단위 4건), `widget_test.dart`(위젯 5건)
 
 ---
 
