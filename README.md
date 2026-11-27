@@ -57,6 +57,22 @@ flutter run -d chrome
 flutter build web
 ```
 
+> **Windows 한글 계정 경로 참고**: Windows 사용자 경로(예: `C:\Users\<한글명>`)에 비ASCII 문자가 포함된 경우 Flutter의 `impellerc.exe` 셰이더 컴파일러가 테스트/웹 에셋 번들링 중 종료될 수 있습니다. 이 경우 임시 ASCII 드라이브(`subst W: <경로>`, `subst P: <PubCache경로>` 및 `$env:PUB_CACHE="P:\"`)에서 실행하면 정상 빌드/테스트됩니다.
+
+---
+
+## 📁 디렉터리 구조
+
+- `lib/main.dart`: 앱 진입점(`BoardgameCalcApp`) 및 3단 테이블탑 레이아웃
+- `lib/theme/boardgame_theme.dart`: Warm Walnut & Parchment Gold 단일 테마 및 8색 플레이어 팔레트
+- `lib/models/boardgame_models.dart`: 도메인 모델, Enum, 숫자 포맷터 및 정렬 유틸
+- `lib/services/local_boardgame_engine.dart`: 순수 Dart 오프라인/Pass & Play 게임 엔진
+- `lib/services/boardgame_socket_client.dart`: NestJS `boardgameCalc:*` Socket.IO 클라이언트
+- `lib/services/boardgame_audio*.dart`: Web Audio API 0KB 합성 효과음 및 플랫폼 스텁
+- `lib/state/boardgame_calc_controller.dart`: 온/오프라인 통합 컨트롤러(`ChangeNotifier`)
+- `lib/widgets/`: 로비, 상단/중앙/하단 패널, 비밀노트, 햄버거 드로어, 모달 7종
+- `test/`: `local_engine_test.dart`(단위 테스트 10건), `widget_test.dart`(위젯 테스트 4건)
+
 ---
 
 ## 📚 문서 및 규칙
