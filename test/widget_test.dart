@@ -34,6 +34,7 @@ void main() {
 
     expect(find.text('보드게임 계산기'), findsOneWidget);
     expect(controller.isOfflineMode, isTrue);
+    expect(controller.serverUrl, 'https://1234banpick.me');
 
     // Switch to create room tab & submit
     await tester.tap(find.text('새 공개방 만들기').first);

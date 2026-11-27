@@ -142,6 +142,7 @@ class BoardgameCalcConstants {
 
   static const int maxNicknameLength = 15;
   static const int maxSafeAmount = 1000000000000;
+  static const String defaultServerUrl = 'https://1234banpick.me';
   static const String defaultCurrencyUnit = '원';
   static const String defaultScoreUnit = '점';
   static const int defaultInitialPoints = 1000;
