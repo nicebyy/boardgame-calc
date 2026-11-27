@@ -1,6 +1,9 @@
 import 'package:audioplayers/audioplayers.dart';
 import 'package:flutter/services.dart';
 
+import 'lobby_bgm_guard_stub.dart'
+    if (dart.library.js_interop) 'lobby_bgm_guard_web.dart' as guard;
+
 /// 로비 배경음악(BGM) 재생 상태.
 enum LobbyBgmStatus {
   disabled,
@@ -50,6 +53,7 @@ class AudioplayersLobbyBgmPlayer implements LobbyBgmPlayer {
     String assetSourcePath, {
     required double volume,
   }) async {
+    if (guard.isFlutterTestEnvironment) return;
     final player = _ensurePlayer();
     final safeVolume = volume.clamp(0.0, 1.0).toDouble();
     await player.setReleaseMode(ReleaseMode.loop);
@@ -59,6 +63,7 @@ class AudioplayersLobbyBgmPlayer implements LobbyBgmPlayer {
 
   @override
   Future<void> setVolume(double volume) async {
+    if (guard.isFlutterTestEnvironment) return;
     final player = _player;
     if (player == null) return;
     try {
@@ -68,6 +73,7 @@ class AudioplayersLobbyBgmPlayer implements LobbyBgmPlayer {
 
   @override
   Future<void> stop() async {
+    if (guard.isFlutterTestEnvironment) return;
     final player = _player;
     if (player == null) return;
     try {
@@ -79,7 +85,7 @@ class AudioplayersLobbyBgmPlayer implements LobbyBgmPlayer {
   Future<void> dispose() async {
     final player = _player;
     _player = null;
-    if (player == null) return;
+    if (guard.isFlutterTestEnvironment || player == null) return;
     try {
       await player.dispose();
     } catch (_) {}

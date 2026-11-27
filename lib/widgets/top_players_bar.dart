@@ -247,103 +247,265 @@ class BoardgameCalcTopPlayers extends StatelessWidget {
             }).toList(),
           )
         else
-          SizedBox(
-            height: isScoreEnabled && showCurrency ? 96 : 74,
-            child: ListView.separated(
-              scrollDirection: Axis.horizontal,
-              itemCount: sorted.length,
-              separatorBuilder: (_, _) => const SizedBox(width: 8),
-              itemBuilder: (context, idx) {
-                final p = sorted[idx];
+          LayoutBuilder(
+            builder: (context, constraints) {
+              final count = sorted.length;
+              final gap = count >= 6 ? 4.0 : (count >= 4 ? 5.0 : 8.0);
+              final perCardWidth =
+                  (constraints.maxWidth - gap * (count - 1)) / count;
+              final useScroll = count > 6 && perCardWidth < 60;
+
+              Widget buildCard(BoardgameCalcPlayer p) {
                 final isMe =
                     p.matchesIdentity(myId: myId, mySessionId: mySessionId);
-                final theme = getPlayerTheme(p.avatarColor);
-                return InkWell(
-                  borderRadius: BorderRadius.circular(16),
+                return _TopPlayerCompactCard(
+                  player: p,
+                  isMe: isMe,
+                  settings: settings,
+                  showCurrency: showCurrency,
+                  isScoreEnabled: isScoreEnabled,
+                  playerCount: count,
                   onTap: isMe ? null : () => onTapPlayer(p),
-                  child: Container(
-                    width: 164,
-                    padding: const EdgeInsets.symmetric(
-                      horizontal: 10,
-                      vertical: 8,
-                    ),
-                    decoration: BoxDecoration(
-                      color: theme.cardBg,
-                      borderRadius: BorderRadius.circular(16),
-                      border: Border.all(color: theme.cardBorder, width: 1.5),
-                      boxShadow: [
-                        BoxShadow(
-                          color: Colors.black.withValues(alpha: 0.05),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ],
-                    ),
-                    child: Column(
-                      crossAxisAlignment: CrossAxisAlignment.start,
-                      mainAxisAlignment: MainAxisAlignment.center,
+                );
+              }
+
+              if (useScroll) {
+                return SingleChildScrollView(
+                  scrollDirection: Axis.horizontal,
+                  child: IntrinsicHeight(
+                    child: Row(
+                      crossAxisAlignment: CrossAxisAlignment.stretch,
                       children: [
-                        Row(
-                          children: [
-                            BoardgameCalcAvatar(
-                              nickname: p.nickname,
-                              avatarUrl: p.avatarUrl,
-                              avatarColor: p.avatarColor,
-                              size: 26,
-                              isOnline: p.isOnline,
-                              showOnlineDot: true,
-                            ),
-                            const SizedBox(width: 6),
-                            Expanded(
-                              child: Text(
-                                p.nickname,
-                                overflow: TextOverflow.ellipsis,
-                                style: const TextStyle(
-                                  color: BoardgameColors.inkPrimary,
-                                  fontWeight: FontWeight.w900,
-                                  fontSize: 12,
-                                ),
-                              ),
-                            ),
-                            if (p.isHost)
-                              const Icon(
-                                Icons.workspace_premium,
-                                size: 13,
-                                color: BoardgameColors.amberBright,
-                              ),
-                          ],
-                        ),
-                        const SizedBox(height: 6),
-                        if (showCurrency)
-                          Text(
-                            '${formatCompactNumber(p.points)} ${settings.currencyUnit}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: BoardgameColors.inkPrimary,
-                              fontWeight: FontWeight.w900,
-                              fontFamily: 'monospace',
-                              fontSize: 13,
-                            ),
-                          ),
-                        if (isScoreEnabled)
-                          Text(
-                            '🏆 ${formatCompactNumber(p.score)} ${settings.scoreUnit}',
-                            overflow: TextOverflow.ellipsis,
-                            style: const TextStyle(
-                              color: BoardgameColors.amberScoreText,
-                              fontWeight: FontWeight.w800,
-                              fontFamily: 'monospace',
-                              fontSize: 11.5,
-                            ),
-                          ),
+                        for (var i = 0; i < count; i++) ...[
+                          if (i > 0) SizedBox(width: gap),
+                          SizedBox(width: 76, child: buildCard(sorted[i])),
+                        ],
                       ],
                     ),
                   ),
                 );
-              },
-            ),
+              }
+
+              return IntrinsicHeight(
+                child: Row(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  children: [
+                    for (var i = 0; i < count; i++) ...[
+                      if (i > 0) SizedBox(width: gap),
+                      Expanded(child: buildCard(sorted[i])),
+                    ],
+                  ],
+                ),
+              );
+            },
           ),
       ],
+    );
+  }
+}
+
+class _TopPlayerCompactCard extends StatelessWidget {
+  const _TopPlayerCompactCard({
+    required this.player,
+    required this.isMe,
+    required this.settings,
+    required this.showCurrency,
+    required this.isScoreEnabled,
+    required this.playerCount,
+    this.onTap,
+  });
+
+  final BoardgameCalcPlayer player;
+  final bool isMe;
+  final BoardgameCalcSettings settings;
+  final bool showCurrency;
+  final bool isScoreEnabled;
+  final int playerCount;
+  final VoidCallback? onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    final theme = getPlayerTheme(player.avatarColor);
+    final compact = playerCount >= 4;
+    final ultraCompact = playerCount >= 6;
+    final padH = ultraCompact ? 5.0 : (compact ? 6.0 : 10.0);
+    final padV = ultraCompact ? 5.0 : (compact ? 6.0 : 8.0);
+    final avatarSize = ultraCompact ? 18.0 : (compact ? 20.0 : 26.0);
+    final nickSize = ultraCompact ? 10.0 : (compact ? 11.0 : 12.0);
+    final numSize = ultraCompact ? 10.0 : (compact ? 11.0 : 12.5);
+    final unitSize = ultraCompact ? 8.5 : (compact ? 9.0 : 10.0);
+
+    return InkWell(
+      borderRadius: BorderRadius.circular(compact ? 12 : 16),
+      onTap: onTap,
+      child: Container(
+        padding: EdgeInsets.symmetric(horizontal: padH, vertical: padV),
+        decoration: BoxDecoration(
+          color: theme.cardBg,
+          borderRadius: BorderRadius.circular(compact ? 12 : 16),
+          border: Border.all(
+            color: isMe ? const Color(0xFF3B82F6) : theme.cardBorder,
+            width: isMe ? 2.0 : 1.5,
+          ),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black.withValues(alpha: 0.05),
+              blurRadius: 6,
+              offset: const Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Column(
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: [
+            Row(
+              children: [
+                BoardgameCalcAvatar(
+                  nickname: player.nickname,
+                  avatarUrl: player.avatarUrl,
+                  avatarColor: player.avatarColor,
+                  size: avatarSize,
+                  isOnline: player.isOnline,
+                  showOnlineDot: true,
+                ),
+                SizedBox(width: ultraCompact ? 3 : 5),
+                Expanded(
+                  child: Text(
+                    player.nickname,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: TextStyle(
+                      color: BoardgameColors.inkPrimary,
+                      fontWeight: FontWeight.w900,
+                      fontSize: nickSize,
+                    ),
+                  ),
+                ),
+                if (isMe && !ultraCompact) ...[
+                  const SizedBox(width: 2),
+                  const _SmallTag(
+                    label: '나',
+                    bg: Color(0x262563EB),
+                    border: Color(0x663B82F6),
+                    textColor: Color(0xFF1E40AF),
+                  ),
+                ],
+                if (player.isHost) ...[
+                  const SizedBox(width: 2),
+                  Icon(
+                    Icons.workspace_premium,
+                    size: ultraCompact ? 10 : 12,
+                    color: BoardgameColors.amberBright,
+                  ),
+                ],
+              ],
+            ),
+            SizedBox(height: ultraCompact ? 4 : 5),
+            if (showCurrency)
+              _InnerValueBox(
+                theme: theme,
+                valueText: formatCompactNumber(player.points),
+                unitText: settings.currencyUnit,
+                numSize: numSize,
+                unitSize: unitSize,
+                textColor: BoardgameColors.inkPrimary,
+                unitColor: const Color(0xFF7A5438),
+                ultraCompact: ultraCompact,
+              ),
+            if (showCurrency && isScoreEnabled)
+              SizedBox(height: ultraCompact ? 3 : 4),
+            if (isScoreEnabled)
+              _InnerValueBox(
+                theme: theme,
+                valueText: formatCompactNumber(player.score),
+                unitText: settings.scoreUnit,
+                numSize: numSize,
+                unitSize: unitSize,
+                textColor: BoardgameColors.amberScoreText,
+                unitColor: const Color(0xFF9C6A1E),
+                leadingIcon: Icons.emoji_events_rounded,
+                leadingIconColor: BoardgameColors.amberBright,
+                ultraCompact: ultraCompact,
+              ),
+          ],
+        ),
+      ),
+    );
+  }
+}
+
+class _InnerValueBox extends StatelessWidget {
+  const _InnerValueBox({
+    required this.theme,
+    required this.valueText,
+    required this.unitText,
+    required this.numSize,
+    required this.unitSize,
+    required this.textColor,
+    required this.unitColor,
+    this.leadingIcon,
+    this.leadingIconColor,
+    required this.ultraCompact,
+  });
+
+  final PlayerThemeColor theme;
+  final String valueText;
+  final String unitText;
+  final double numSize;
+  final double unitSize;
+  final Color textColor;
+  final Color unitColor;
+  final IconData? leadingIcon;
+  final Color? leadingIconColor;
+  final bool ultraCompact;
+
+  @override
+  Widget build(BuildContext context) {
+    return Container(
+      padding: EdgeInsets.symmetric(
+        horizontal: ultraCompact ? 4 : 6,
+        vertical: ultraCompact ? 2 : 3,
+      ),
+      decoration: BoxDecoration(
+        color: theme.innerBoxBg,
+        borderRadius: BorderRadius.circular(8),
+        border: Border.all(color: theme.innerBoxBorder),
+      ),
+      child: Row(
+        children: [
+          if (leadingIcon != null) ...[
+            Icon(
+              leadingIcon,
+              size: ultraCompact ? 9 : 11,
+              color: leadingIconColor,
+            ),
+            const SizedBox(width: 2),
+          ],
+          Expanded(
+            child: Text(
+              valueText,
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
+              style: TextStyle(
+                color: textColor,
+                fontWeight: FontWeight.w900,
+                fontFamily: 'monospace',
+                fontSize: numSize,
+              ),
+            ),
+          ),
+          const SizedBox(width: 2),
+          Text(
+            unitText,
+            style: TextStyle(
+              color: unitColor,
+              fontWeight: FontWeight.w700,
+              fontSize: unitSize,
+            ),
+          ),
+        ],
+      ),
     );
   }
 }

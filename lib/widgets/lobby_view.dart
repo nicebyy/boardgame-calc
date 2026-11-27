@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../models/boardgame_models.dart';
+import '../services/boardgame_audio.dart';
 import '../services/lobby_bgm_service.dart';
 import '../state/boardgame_calc_controller.dart';
 import '../theme/boardgame_theme.dart';
@@ -70,6 +71,7 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
   }
 
   void _handleCreateRoom() {
+    BoardgameAudio.playClick();
     final nick = _nickCtrl.text.trim().isNotEmpty
         ? _nickCtrl.text.trim()
         : '플레이어1';
@@ -93,6 +95,7 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
   }
 
   Future<void> _confirmDeleteRoom(BoardgameCalcRoomSummary room) async {
+    BoardgameAudio.playModal();
     final ok = await showBoardgameConfirmDialog(
       context,
       title: '방장 권한 방 삭제',
@@ -151,14 +154,16 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                             color: BoardgameColors.walnutPrimary,
                           ),
                           const SizedBox(width: 6),
-                          Text(
-                            c.isOfflineMode
-                                ? '오프라인 테이블 모드 (서버 없이 즉시 플레이)'
-                                : '온라인 멀티플레이어 (Socket.IO 연동)',
-                            style: const TextStyle(
-                              color: BoardgameColors.inkSecondary,
-                              fontWeight: FontWeight.w800,
-                              fontSize: 12,
+                          Flexible(
+                            child: Text(
+                              c.isOfflineMode
+                                  ? '오프라인 테이블 모드 (서버 없이 즉시 플레이)'
+                                  : '온라인 멀티플레이어 (Socket.IO 연동)',
+                              style: const TextStyle(
+                                color: BoardgameColors.inkSecondary,
+                                fontWeight: FontWeight.w800,
+                                fontSize: 12,
+                              ),
                             ),
                           ),
                         ],
@@ -218,8 +223,10 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                         ),
                         const SizedBox(width: 8),
                         ElevatedButton(
-                          onPressed: () =>
-                              c.updateServerUrl(_serverUrlCtrl.text),
+                          onPressed: () {
+                            BoardgameAudio.playClick();
+                            c.updateServerUrl(_serverUrlCtrl.text);
+                          },
                           style: ElevatedButton.styleFrom(
                             backgroundColor: BoardgameColors.walnutPrimary,
                             foregroundColor: BoardgameColors.creamWarmWhite,
@@ -253,7 +260,10 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                 children: [
                   Expanded(
                     child: InkWell(
-                      onTap: () => setState(() => _tab = 'rooms'),
+                      onTap: () {
+                        BoardgameAudio.playTab();
+                        setState(() => _tab = 'rooms');
+                      },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -316,7 +326,10 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                   const SizedBox(width: 6),
                   Expanded(
                     child: InkWell(
-                      onTap: () => setState(() => _tab = 'create'),
+                      onTap: () {
+                        BoardgameAudio.playTab();
+                        setState(() => _tab = 'create');
+                      },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         padding: const EdgeInsets.symmetric(vertical: 12),
@@ -718,6 +731,7 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                           ],
                           ElevatedButton.icon(
                             onPressed: () {
+                              BoardgameAudio.playClick();
                               final nick = _nickCtrl.text.trim().isNotEmpty
                                   ? _nickCtrl.text.trim()
                                   : '플레이어';
@@ -1026,7 +1040,10 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                     Row(
                       children: [
                         OutlinedButton(
-                          onPressed: () => setState(() => _tab = 'rooms'),
+                          onPressed: () {
+                            BoardgameAudio.playTab();
+                            setState(() => _tab = 'rooms');
+                          },
                           style: OutlinedButton.styleFrom(
                             backgroundColor: const Color(0xFFF4EBE1),
                             foregroundColor: BoardgameColors.inkSecondary,
@@ -1089,7 +1106,10 @@ class _ModeSwitchPill extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        BoardgameAudio.playTab();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(8),
       child: Container(
         padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
@@ -1133,7 +1153,10 @@ class _LobbyPresetButton extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        BoardgameAudio.playClick();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 10),
@@ -1180,7 +1203,10 @@ class _LobbyRuleCard extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        BoardgameAudio.playClick();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(12),
       child: Container(
         padding: const EdgeInsets.all(10),
