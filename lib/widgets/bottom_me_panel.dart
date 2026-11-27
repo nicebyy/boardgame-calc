@@ -35,18 +35,28 @@ class BoardgameCalcBottomMe extends StatelessWidget {
         displayMode == ScoreDisplayMode.currency;
     final showScore = displayMode == ScoreDisplayMode.all ||
         displayMode == ScoreDisplayMode.score;
-    final myTheme = getPlayerTheme(me.avatarColor);
 
     return Container(
       width: double.infinity,
       padding: const EdgeInsets.all(14),
       decoration: BoxDecoration(
-        color: myTheme.cardBg,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: myTheme.cardBorder, width: 2),
+        gradient: const LinearGradient(
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+          colors: [
+            BoardgameColors.lightWoodTop,
+            BoardgameColors.lightWoodMid,
+            BoardgameColors.lightWoodEdge,
+          ],
+        ),
+        borderRadius: BorderRadius.circular(18),
+        border: Border.all(
+          color: BoardgameColors.lightWoodBorder,
+          width: 1.2,
+        ),
         boxShadow: [
           BoxShadow(
-            color: const Color(0xFF32190A).withValues(alpha: 0.12),
+            color: const Color(0xFF3E2310).withValues(alpha: 0.13),
             blurRadius: 16,
             offset: const Offset(0, 4),
           ),
@@ -59,9 +69,12 @@ class BoardgameCalcBottomMe extends StatelessWidget {
           // 0. 내 프로필 헤더
           Container(
             padding: const EdgeInsets.only(bottom: 10),
-            decoration: BoxDecoration(
+            decoration: const BoxDecoration(
               border: Border(
-                bottom: BorderSide(color: myTheme.innerBoxBorder, width: 1),
+                bottom: BorderSide(
+                  color: BoardgameColors.lightWoodDivider,
+                  width: 1,
+                ),
               ),
             ),
             child: Row(
@@ -192,14 +205,13 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                       width: 28,
                       height: 28,
                       decoration: BoxDecoration(
-                        color:
-                            BoardgameColors.amberBright.withValues(alpha: 0.2),
+                        color: BoardgameColors.gold.withValues(alpha: 0.2),
                         borderRadius: BorderRadius.circular(8),
                       ),
                       child: const Icon(
                         Icons.account_balance_wallet_rounded,
                         size: 16,
-                        color: BoardgameColors.amberScoreText,
+                        color: BoardgameColors.walnutPrimary,
                       ),
                     ),
                     const SizedBox(width: 8),
@@ -241,9 +253,12 @@ class BoardgameCalcBottomMe extends StatelessWidget {
                           ),
                         ),
                         style: OutlinedButton.styleFrom(
-                          backgroundColor: Colors.white.withValues(alpha: 0.85),
-                          foregroundColor: BoardgameColors.walnutPrimary,
-                          side: BorderSide(color: myTheme.cardBorder),
+                          backgroundColor: BoardgameColors.lightWoodChipBg,
+                          foregroundColor: BoardgameColors.inkSecondary,
+                          side: BorderSide(
+                            color: BoardgameColors.lightWoodBorder
+                                .withValues(alpha: 0.8),
+                          ),
                           padding: const EdgeInsets.symmetric(
                             horizontal: 10,
                             vertical: 8,
@@ -349,7 +364,7 @@ class BoardgameCalcBottomMe extends StatelessWidget {
           // 2. 빠른 화폐 증감 단위 스테퍼
           if (canAdjustPoints && showCurrency && currencyDenoms.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Divider(color: myTheme.innerBoxBorder, height: 1),
+            const Divider(color: BoardgameColors.lightWoodDivider, height: 1),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -399,7 +414,7 @@ class BoardgameCalcBottomMe extends StatelessWidget {
           // 3. 빠른 점수 증감 단위 스테퍼
           if (canAdjustScore && showScore && scoreDenoms.isNotEmpty) ...[
             const SizedBox(height: 10),
-            Divider(color: myTheme.innerBoxBorder, height: 1),
+            const Divider(color: BoardgameColors.lightWoodDivider, height: 1),
             const SizedBox(height: 8),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,

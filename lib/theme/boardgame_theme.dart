@@ -12,6 +12,14 @@ class BoardgameColors {
   static const Color canvasBorder = Color(0xFFC4A685);
   static const Color canvasSubtleBorder = Color(0xFFE8D7C4);
 
+  // Light wood-board tokens (BottomMe panel / thin wood tray)
+  static const Color lightWoodTop = Color(0xFFF6EAD7);
+  static const Color lightWoodMid = Color(0xFFEDE0CB);
+  static const Color lightWoodEdge = Color(0xFFE5D2B5);
+  static const Color lightWoodBorder = Color(0xFFC29B68);
+  static const Color lightWoodDivider = Color(0x47A8804E);
+  static const Color lightWoodChipBg = Color(0xE6FAF2E6);
+
   // Parchment text & walnut accents
   static const Color inkPrimary = Color(0xFF2C180D);
   static const Color inkSecondary = Color(0xFF5A3822);
