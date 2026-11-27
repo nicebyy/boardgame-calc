@@ -55,9 +55,15 @@ flutter run -d chrome
 
 # 프로덕션 웹 빌드
 flutter build web
+
+# Android APK 릴리즈 빌드 (Android SDK 환경 또는 GitHub Actions)
+flutter build apk --release
+# 산출물: build/app/outputs/flutter-apk/app-release.apk
 ```
 
 > **Windows 한글 계정 경로 참고**: Windows 사용자 경로(예: `C:\Users\<한글명>`)에 비ASCII 문자가 포함된 경우 Flutter의 `impellerc.exe` 셰이더 컴파일러가 테스트/웹 에셋 번들링 중 종료될 수 있습니다. 이 경우 임시 ASCII 드라이브(`subst W: <경로>`, `subst P: <PubCache경로>` 및 `$env:PUB_CACHE="P:\"`)에서 실행하면 정상 빌드/테스트됩니다.
+>
+> **Android APK 간편 다운로드 (GitHub Actions)**: `main` 또는 `develop` 브랜치 푸시 시 [`.github/workflows/build-apk.yml`](./.github/workflows/build-apk.yml) 워크플로우가 자동 실행되며, GitHub 저장소의 **Actions → Artifacts**에서 `boardgame-calc-release-apk` (`app-release.apk`)를 내려받아 Android 기기에 바로 설치할 수 있습니다.
 
 ---
 
