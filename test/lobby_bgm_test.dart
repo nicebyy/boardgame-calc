@@ -175,4 +175,67 @@ void main() {
 
     controller.dispose();
   });
+
+  test('BoardgameAudio emits money (bet_chip, bid_coin, refund) and paper write cues',
+      () {
+    final events = <String>[];
+    BoardgameAudio.globalEnabled = true;
+    BoardgameAudio.debugObserver = events.add;
+    addTearDown(() => BoardgameAudio.debugObserver = null);
+
+    BoardgameAudio.playBetChipSound();
+    BoardgameAudio.playBidCoinSound();
+    BoardgameAudio.playRefundSound();
+    BoardgameAudio.playSecretNoteWriteSound();
+    expect(events, ['bet_chip', 'bid_coin', 'refund', 'secret_write']);
+
+    final paperWav = buildBoardgamePcmWav(
+      startFreq: 220,
+      endFreq: 320,
+      durationSec: 0.08,
+      noiseMix: 0.9,
+    );
+    expect(String.fromCharCodes(paperWav.sublist(0, 4)), 'RIFF');
+  });
+
+  test('Controller dispatches dedicated money & deduplicated paper SFX in offline actions',
+      () async {
+    final events = <String>[];
+    BoardgameAudio.debugObserver = events.add;
+    addTearDown(() => BoardgameAudio.debugObserver = null);
+
+    final controller = BoardgameCalcController(bgmPlayer: FakeLobbyBgmPlayer(assetPresent: false));
+    await controller.init();
+    controller.createRoom(nickname: '호스트', title: 'SFX 테스트방');
+
+    events.clear();
+    controller.placeBet(100);
+    expect(events, ['bet_chip']);
+
+    events.clear();
+    controller.resetBettingPot();
+    expect(events, ['refund']);
+
+    events.clear();
+    controller.startAuction(title: '아이템', minIncrement: 100);
+    expect(events, ['auction_gong']);
+
+    events.clear();
+    controller.placeBid(200);
+    expect(events, ['bid_coin']);
+
+    events.clear();
+    controller.startSecretNote(title: '주제');
+    expect(events, ['secret_fold']);
+
+    events.clear();
+    controller.lockSecretNote();
+    expect(events, ['secret_lock']);
+
+    events.clear();
+    controller.revealSecretNote();
+    expect(events, ['secret_reveal']);
+
+    controller.dispose();
+  });
 }
