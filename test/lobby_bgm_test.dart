@@ -1,3 +1,5 @@
+import 'package:boardgame_calc/services/boardgame_audio.dart';
+import 'package:boardgame_calc/services/boardgame_audio_stub.dart';
 import 'package:boardgame_calc/services/lobby_bgm_service.dart';
 import 'package:boardgame_calc/state/boardgame_calc_controller.dart';
 import 'package:flutter_test/flutter_test.dart';
@@ -128,5 +130,49 @@ void main() {
     expect(controller2.bgmVolume, 0.7);
     expect(controller2.bgmStatus, LobbyBgmStatus.disabled);
     controller2.dispose();
+  });
+
+  test('buildBoardgamePcmWav generates valid RIFF WAVE PCM bytes', () {
+    final wav = buildBoardgamePcmWav(
+      startFreq: 440,
+      endFreq: 190,
+      durationSec: 0.04,
+      sampleRate: 22050,
+    );
+    expect(wav.length, 44 + (22050 * 0.04).round() * 2);
+    expect(String.fromCharCodes(wav.sublist(0, 4)), 'RIFF');
+    expect(String.fromCharCodes(wav.sublist(8, 12)), 'WAVE');
+    expect(String.fromCharCodes(wav.sublist(36, 40)), 'data');
+  });
+
+  test('BoardgameAudio UI click/tab/modal cues respect globalEnabled and controller toggle',
+      () async {
+    final events = <String>[];
+    BoardgameAudio.debugObserver = events.add;
+    addTearDown(() => BoardgameAudio.debugObserver = null);
+
+    final fake = FakeLobbyBgmPlayer(assetPresent: false);
+    final controller = BoardgameCalcController(bgmPlayer: fake);
+    await controller.init();
+
+    expect(controller.soundEnabled, isTrue);
+    expect(BoardgameAudio.globalEnabled, isTrue);
+
+    BoardgameAudio.playClick();
+    BoardgameAudio.playTab();
+    BoardgameAudio.playModal();
+    expect(events, ['click', 'tab', 'modal']);
+
+    controller.toggleSound();
+    expect(controller.soundEnabled, isFalse);
+    expect(BoardgameAudio.globalEnabled, isFalse);
+
+    events.clear();
+    BoardgameAudio.playClick();
+    BoardgameAudio.playTab();
+    BoardgameAudio.playModal();
+    expect(events, isEmpty);
+
+    controller.dispose();
   });
 }

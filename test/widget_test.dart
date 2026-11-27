@@ -1,9 +1,31 @@
 import 'package:boardgame_calc/main.dart';
 import 'package:boardgame_calc/models/boardgame_models.dart';
+import 'package:boardgame_calc/services/boardgame_audio.dart';
+import 'package:boardgame_calc/services/lobby_bgm_service.dart';
 import 'package:boardgame_calc/state/boardgame_calc_controller.dart';
+import 'package:boardgame_calc/widgets/middle_board_panel.dart';
+import 'package:boardgame_calc/widgets/top_players_bar.dart';
+import 'package:flutter/services.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:material_ui/material_ui.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+
+class _TestLobbyBgmPlayer implements LobbyBgmPlayer {
+  @override
+  Future<bool> hasAsset(String bundlePath) async => true;
+
+  @override
+  Future<void> playAsset(String assetSourcePath, {required double volume}) async {}
+
+  @override
+  Future<void> setVolume(double volume) async {}
+
+  @override
+  Future<void> stop() async {}
+
+  @override
+  Future<void> dispose() async {}
+}
 
 void main() {
   setUp(() {
@@ -13,13 +35,14 @@ void main() {
   Future<BoardgameCalcController> pumpInitializedApp(
     WidgetTester tester, {
     Size surfaceSize = const Size(1280, 960),
+    LobbyBgmPlayer? bgmPlayer,
   }) async {
     tester.view.physicalSize = surfaceSize;
     tester.view.devicePixelRatio = 1.0;
     addTearDown(tester.view.resetPhysicalSize);
     addTearDown(tester.view.resetDevicePixelRatio);
 
-    final controller = BoardgameCalcController();
+    final controller = BoardgameCalcController(bgmPlayer: bgmPlayer);
     await controller.init();
     addTearDown(controller.dispose);
 
@@ -30,21 +53,27 @@ void main() {
 
   testWidgets('Lobby renders Offline mode toggle and creates offline room into 3-tier arena',
       (WidgetTester tester) async {
+    final sfxEvents = <String>[];
+    BoardgameAudio.debugObserver = sfxEvents.add;
+    addTearDown(() => BoardgameAudio.debugObserver = null);
+
     final controller = await pumpInitializedApp(tester);
 
     expect(find.text('보드게임 계산기'), findsOneWidget);
     expect(controller.isOfflineMode, isTrue);
     expect(controller.serverUrl, 'https://1234banpick.me');
 
-    // Switch to create room tab & submit
+    // Switch to create room tab & submit -> emits tab & click SFX
     await tester.tap(find.text('새 공개방 만들기').first);
     await tester.pumpAndSettle();
+    expect(sfxEvents, contains('tab'));
 
     final createSubmit = find.text('공개방 생성하고 게임 시작');
     await tester.ensureVisible(createSubmit);
     await tester.pumpAndSettle();
     await tester.tap(createSubmit);
     await tester.pumpAndSettle();
+    expect(sfxEvents, contains('click'));
 
     expect(controller.room, isNotNull);
     expect(find.text('오프라인'), findsOneWidget);
@@ -165,12 +194,21 @@ void main() {
     expect(controller.room!.players[1].points, 2500);
   });
 
-  testWidgets('Lobby BGM control bar displays missingAsset hint and toggles ON/OFF',
+  testWidgets('Lobby BGM bundles lobby_bgm.mp3 asset and control bar toggles ON/OFF',
       (WidgetTester tester) async {
-    final controller = await pumpInitializedApp(tester);
+    final controller = await pumpInitializedApp(
+      tester,
+      bgmPlayer: _TestLobbyBgmPlayer(),
+    );
+
+    final manifest = await AssetManifest.loadFromAssetBundle(rootBundle);
+    expect(
+      manifest.listAssets(),
+      contains(AudioplayersLobbyBgmPlayer.defaultBundlePath),
+    );
 
     expect(find.text('로비 BGM'), findsOneWidget);
-    expect(find.text('음원 미등록'), findsOneWidget);
+    expect(find.text('재생 중'), findsOneWidget);
     expect(find.text('BGM ON'), findsOneWidget);
 
     await tester.tap(find.text('BGM ON'));
@@ -179,5 +217,34 @@ void main() {
     expect(controller.bgmEnabled, isFalse);
     expect(find.text('BGM OFF'), findsOneWidget);
     expect(find.text('꺼짐'), findsOneWidget);
+  });
+
+  testWidgets('Mobile portrait fits 4 top player cards without scroll and keeps middle board full height',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(
+      tester,
+      surfaceSize: const Size(390, 440),
+    );
+    controller.createRoom(nickname: 'P1', title: '모바일 테스트방');
+    controller.addLocalPlayer('P2');
+    controller.addLocalPlayer('P3');
+    controller.addLocalPlayer('P4');
+    controller.setCenterTool(CenterToolType.secretNote);
+    await tester.pumpAndSettle();
+
+    // All 4 players in TopPlayersBar fit side-by-side within 390px viewport
+    final topBar = find.byType(BoardgameCalcTopPlayers);
+    expect(topBar, findsOneWidget);
+    for (final name in ['P1', 'P2', 'P3', 'P4']) {
+      final cardName = find.descendant(of: topBar, matching: find.text(name));
+      expect(cardName, findsOneWidget);
+      final rect = tester.getRect(cardName);
+      expect(rect.left, greaterThanOrEqualTo(0));
+      expect(rect.right, lessThanOrEqualTo(390));
+    }
+
+    // Center board keeps full height (>= 200px) even on 440px simulated keyboard height
+    final middleRect = tester.getRect(find.byType(BoardgameCalcMiddleAuction));
+    expect(middleRect.height, greaterThan(200));
   });
 }

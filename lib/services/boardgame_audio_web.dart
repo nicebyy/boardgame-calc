@@ -16,6 +16,70 @@ web.AudioContext? _getAudioContext() {
   }
 }
 
+void playClickSound(bool enabled) {
+  if (!enabled) return;
+  final ctx = _getAudioContext();
+  if (ctx == null) return;
+  try {
+    final now = ctx.currentTime;
+    final osc = ctx.createOscillator();
+    final filter = ctx.createBiquadFilter();
+    final gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(440, now);
+    osc.frequency.exponentialRampToValueAtTime(185, now + 0.038);
+    filter.type = 'lowpass';
+    filter.frequency.setValueAtTime(1400, now);
+    gain.gain.setValueAtTime(0.12, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.042);
+    osc.connect(filter);
+    filter.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.045);
+  } catch (_) {}
+}
+
+void playTabSound(bool enabled) {
+  if (!enabled) return;
+  final ctx = _getAudioContext();
+  if (ctx == null) return;
+  try {
+    final now = ctx.currentTime;
+    final osc = ctx.createOscillator();
+    final gain = ctx.createGain();
+    osc.type = 'sine';
+    osc.frequency.setValueAtTime(580, now);
+    osc.frequency.exponentialRampToValueAtTime(790, now + 0.032);
+    gain.gain.setValueAtTime(0.08, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.036);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.038);
+  } catch (_) {}
+}
+
+void playModalSound(bool enabled) {
+  if (!enabled) return;
+  final ctx = _getAudioContext();
+  if (ctx == null) return;
+  try {
+    final now = ctx.currentTime;
+    final osc = ctx.createOscillator();
+    final gain = ctx.createGain();
+    osc.type = 'triangle';
+    osc.frequency.setValueAtTime(392, now);
+    osc.frequency.exponentialRampToValueAtTime(523.25, now + 0.065);
+    gain.gain.setValueAtTime(0.09, now);
+    gain.gain.exponentialRampToValueAtTime(0.001, now + 0.075);
+    osc.connect(gain);
+    gain.connect(ctx.destination);
+    osc.start(now);
+    osc.stop(now + 0.08);
+  } catch (_) {}
+}
+
 void playCoinSound(bool enabled) {
   if (!enabled) return;
   final ctx = _getAudioContext();

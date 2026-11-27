@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../models/boardgame_models.dart';
+import '../services/boardgame_audio.dart';
 import '../theme/boardgame_theme.dart';
 import 'confirm_modal.dart';
 
@@ -60,12 +61,14 @@ class _BoardgameCalcHamburgerMenuState
     if (tool == CenterToolType.auction && !widget.room.settings.enableAuction) {
       return;
     }
+    BoardgameAudio.playTab();
     final next = widget.activeTool == tool ? CenterToolType.empty : tool;
     widget.onSelectTool(next);
     Navigator.of(context).pop();
   }
 
   Future<void> _confirmDelete() async {
+    BoardgameAudio.playModal();
     final ok = await showBoardgameConfirmDialog(
       context,
       title: '방장 권한 방 삭제 및 폭파',
@@ -201,7 +204,10 @@ class _BoardgameCalcHamburgerMenuState
                       ),
                       const SizedBox(width: 4),
                       IconButton(
-                        onPressed: () => Navigator.of(context).pop(),
+                        onPressed: () {
+                          BoardgameAudio.playClick();
+                          Navigator.of(context).pop();
+                        },
                         icon: const Icon(Icons.close,
                             color: BoardgameColors.gold, size: 20),
                       ),
@@ -712,6 +718,7 @@ class _BoardgameCalcHamburgerMenuState
                         width: double.infinity,
                         child: OutlinedButton.icon(
                           onPressed: () {
+                            BoardgameAudio.playClick();
                             Navigator.of(context).pop();
                             widget.onLeaveRoom();
                           },
@@ -856,7 +863,10 @@ class _RuleChip extends StatelessWidget {
   @override
   Widget build(BuildContext context) {
     return InkWell(
-      onTap: onTap,
+      onTap: () {
+        BoardgameAudio.playTab();
+        onTap();
+      },
       borderRadius: BorderRadius.circular(9),
       child: Container(
         padding: const EdgeInsets.symmetric(vertical: 7),

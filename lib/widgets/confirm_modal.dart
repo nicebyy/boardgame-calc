@@ -1,5 +1,6 @@
 import 'package:material_ui/material_ui.dart';
 
+import '../services/boardgame_audio.dart';
 import '../theme/boardgame_theme.dart';
 
 enum ConfirmDialogType { danger, warning, info }
@@ -168,7 +169,10 @@ class BoardgameConfirmDialog extends StatelessWidget {
                   if (!hideCancel) ...[
                     Expanded(
                       child: OutlinedButton(
-                        onPressed: () => Navigator.of(context).pop(false),
+                        onPressed: () {
+                          BoardgameAudio.playClick();
+                          Navigator.of(context).pop(false);
+                        },
                         style: OutlinedButton.styleFrom(
                           padding: const EdgeInsets.symmetric(vertical: 12),
                           backgroundColor: BoardgameColors.walnutCard,
@@ -190,7 +194,10 @@ class BoardgameConfirmDialog extends StatelessWidget {
                   ],
                   Expanded(
                     child: ElevatedButton(
-                      onPressed: () => Navigator.of(context).pop(true),
+                      onPressed: () {
+                        BoardgameAudio.playClick();
+                        Navigator.of(context).pop(true);
+                      },
                       style: ElevatedButton.styleFrom(
                         padding: const EdgeInsets.symmetric(vertical: 12),
                         backgroundColor: type == ConfirmDialogType.danger

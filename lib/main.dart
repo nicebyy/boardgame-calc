@@ -2,6 +2,7 @@ import 'package:material_ui/material_ui.dart';
 import 'package:provider/provider.dart';
 
 import 'models/boardgame_models.dart';
+import 'services/boardgame_audio.dart';
 import 'state/boardgame_calc_controller.dart';
 import 'theme/boardgame_theme.dart';
 import 'widgets/bottom_me_panel.dart';
@@ -141,93 +142,125 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
                     )
                   else
                     Expanded(
-                      child: Column(
-                        children: [
-                          // 알림 배너 스택
-                          if (c.error != null) _buildErrorBanner(c),
-                          if (c.transferToast != null) _buildTransferBanner(c),
-                          if (c.diceToast != null) _buildDiceToastBanner(c),
-                          if (c.sentTransferRequest != null)
-                            _buildSentTransferBanner(c, room),
+                      child: LayoutBuilder(
+                        builder: (context, constraints) {
+                          return SingleChildScrollView(
+                            keyboardDismissBehavior:
+                                ScrollViewKeyboardDismissBehavior.onDrag,
+                            child: ConstrainedBox(
+                              constraints: BoxConstraints(
+                                minHeight: constraints.maxHeight,
+                              ),
+                              child: Column(
+                                mainAxisAlignment:
+                                    MainAxisAlignment.spaceBetween,
+                                crossAxisAlignment: CrossAxisAlignment.stretch,
+                                children: [
+                                  Column(
+                                    crossAxisAlignment:
+                                        CrossAxisAlignment.stretch,
+                                    children: [
+                                      // 알림 배너 스택
+                                      if (c.error != null) _buildErrorBanner(c),
+                                      if (c.transferToast != null)
+                                        _buildTransferBanner(c),
+                                      if (c.diceToast != null)
+                                        _buildDiceToastBanner(c),
+                                      if (c.sentTransferRequest != null)
+                                        _buildSentTransferBanner(c, room),
 
-                          // 1단: 도구 활성화 시 상단 플레이어 바
-                          if (activeTool != CenterToolType.empty) ...[
-                            BoardgameCalcTopPlayers(
-                              players: room.players,
-                              myId: me.id,
-                              mySessionId: me.sessionId,
-                              settings: room.settings,
-                              isHost: me.isHost,
-                              viewMode: c.topPlayersViewMode,
-                              onViewModeChange: c.setTopPlayersViewMode,
-                              sortOption: c.topPlayersSortOption,
-                              onSortOptionChange: c.setTopPlayersSortOption,
-                              onTapPlayer: (p) =>
-                                  _openPlayerActionModal(c, room, me, p),
-                            ),
-                            const SizedBox(height: 8),
-                          ],
+                                      // 1단: 도구 활성화 시 상단 플레이어 바
+                                      if (activeTool !=
+                                          CenterToolType.empty) ...[
+                                        BoardgameCalcTopPlayers(
+                                          players: room.players,
+                                          myId: me.id,
+                                          mySessionId: me.sessionId,
+                                          settings: room.settings,
+                                          isHost: me.isHost,
+                                          viewMode: c.topPlayersViewMode,
+                                          onViewModeChange:
+                                              c.setTopPlayersViewMode,
+                                          sortOption: c.topPlayersSortOption,
+                                          onSortOptionChange:
+                                              c.setTopPlayersSortOption,
+                                          onTapPlayer: (p) =>
+                                              _openPlayerActionModal(
+                                                  c, room, me, p),
+                                        ),
+                                        const SizedBox(height: 8),
+                                      ],
+                                    ],
+                                  ),
 
-                          // 2단: 중앙 보드판 / 도구
-                          Expanded(
-                            child: SingleChildScrollView(
-                              child: BoardgameCalcMiddleAuction(
-                                room: room,
-                                me: me,
-                                activeTool: activeTool,
-                                viewMode: c.topPlayersViewMode,
-                                onViewModeChange: c.setTopPlayersViewMode,
-                                sortOption: c.topPlayersSortOption,
-                                onSortOptionChange: c.setTopPlayersSortOption,
-                                onSelectTool: c.setCenterTool,
-                                onTapPlayer: (p) =>
-                                    _openPlayerActionModal(c, room, me, p),
-                                onStartAuction: c.startAuction,
-                                onPlaceBid: c.placeBid,
-                                onDesignateWinner: c.designateAuctionWinner,
-                                onResetAuction: c.resetAuction,
-                                onPlaceBet: c.placeBet,
-                                onResolveBettingWinner: c.resolveBettingWinner,
-                                onResetBettingPot: c.resetBettingPot,
-                                onRollDice: c.rollDice,
-                                onStartSecretNote: c.startSecretNote,
-                                onUpdateSecretNote: c.updateSecretNote,
-                                onLockSecretNote: c.lockSecretNote,
-                                onRevealSecretNote: c.revealSecretNote,
-                                onResetSecretNote: c.resetSecretNote,
-                                auctionConflictToast: c.auctionConflictToast,
-                                onClearConflictToast: c.clearAuctionConflictToast,
-                                soundEnabled: c.soundEnabled,
+                                  // 2단: 중앙 보드판 / 도구 (모바일·키보드 오픈 시에도 찌그러지지 않음)
+                                  BoardgameCalcMiddleAuction(
+                                    room: room,
+                                    me: me,
+                                    activeTool: activeTool,
+                                    viewMode: c.topPlayersViewMode,
+                                    onViewModeChange: c.setTopPlayersViewMode,
+                                    sortOption: c.topPlayersSortOption,
+                                    onSortOptionChange:
+                                        c.setTopPlayersSortOption,
+                                    onSelectTool: c.setCenterTool,
+                                    onTapPlayer: (p) => _openPlayerActionModal(
+                                        c, room, me, p),
+                                    onStartAuction: c.startAuction,
+                                    onPlaceBid: c.placeBid,
+                                    onDesignateWinner:
+                                        c.designateAuctionWinner,
+                                    onResetAuction: c.resetAuction,
+                                    onPlaceBet: c.placeBet,
+                                    onResolveBettingWinner:
+                                        c.resolveBettingWinner,
+                                    onResetBettingPot: c.resetBettingPot,
+                                    onRollDice: c.rollDice,
+                                    onStartSecretNote: c.startSecretNote,
+                                    onUpdateSecretNote: c.updateSecretNote,
+                                    onLockSecretNote: c.lockSecretNote,
+                                    onRevealSecretNote: c.revealSecretNote,
+                                    onResetSecretNote: c.resetSecretNote,
+                                    auctionConflictToast:
+                                        c.auctionConflictToast,
+                                    onClearConflictToast:
+                                        c.clearAuctionConflictToast,
+                                    soundEnabled: c.soundEnabled,
+                                  ),
+
+                                  Padding(
+                                    padding: const EdgeInsets.only(top: 8),
+                                    // 3단: 하단 내 프로필 & 잔액 카드
+                                    child: BoardgameCalcBottomMe(
+                                      me: me,
+                                      settings: room.settings,
+                                      onAdjustMyPoints: (delta, {unitValue}) =>
+                                          c.adjustPoints(
+                                        me.id,
+                                        delta,
+                                        reason:
+                                            delta > 0 ? '빠른 지급' : '빠른 차감',
+                                        unitValue: unitValue ?? delta.abs(),
+                                      ),
+                                      onAdjustMyScore: (delta, {unitValue}) =>
+                                          c.adjustScore(
+                                        me.id,
+                                        delta,
+                                        reason:
+                                            delta > 0 ? '빠른 승점' : '빠른 감점',
+                                        unitValue: unitValue ?? delta.abs(),
+                                      ),
+                                      onOpenCustomAdjust: () =>
+                                          _openAdjustModal(c, room, me),
+                                      onEditProfile: () =>
+                                          _openRenameModal(c, room, me, me),
+                                    ),
+                                  ),
+                                ],
                               ),
                             ),
-                          ),
-
-                          const SizedBox(height: 8),
-
-                          // 3단: 하단 내 프로필 & 잔액 카드
-                          BoardgameCalcBottomMe(
-                            me: me,
-                            settings: room.settings,
-                            onAdjustMyPoints: (delta, {unitValue}) =>
-                                c.adjustPoints(
-                              me.id,
-                              delta,
-                              reason: delta > 0 ? '빠른 지급' : '빠른 차감',
-                              unitValue: unitValue ?? delta.abs(),
-                            ),
-                            onAdjustMyScore: (delta, {unitValue}) =>
-                                c.adjustScore(
-                              me.id,
-                              delta,
-                              reason: delta > 0 ? '빠른 승점' : '빠른 감점',
-                              unitValue: unitValue ?? delta.abs(),
-                            ),
-                            onOpenCustomAdjust: () =>
-                                _openAdjustModal(c, room, me),
-                            onEditProfile: () =>
-                                _openRenameModal(c, room, me, me),
-                          ),
-                        ],
+                          );
+                        },
                       ),
                     ),
                 ],
@@ -330,7 +363,10 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
             ),
           ),
         ElevatedButton.icon(
-          onPressed: () => _scaffoldKey.currentState?.openEndDrawer(),
+          onPressed: () {
+            BoardgameAudio.playModal();
+            _scaffoldKey.currentState?.openEndDrawer();
+          },
           icon: const Icon(Icons.menu, size: 16),
           label: const Text('메뉴',
               style: TextStyle(fontWeight: FontWeight.w900, fontSize: 12)),
@@ -506,6 +542,7 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
     BoardgameCalcPlayer me,
     BoardgameCalcPlayer target,
   ) {
+    BoardgameAudio.playModal();
     showBoardgamePlayerActionModal(
       context,
       player: target,
@@ -525,6 +562,7 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
     BoardgameCalcPlayer me,
     BoardgameCalcPlayer target,
   ) {
+    BoardgameAudio.playModal();
     showBoardgameTransferModal(
       context,
       targetPlayer: target,
@@ -542,6 +580,7 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
     BoardgameCalcRoom room,
     BoardgameCalcPlayer target,
   ) {
+    BoardgameAudio.playModal();
     showBoardgameAdjustModal(
       context,
       targetPlayer: target,
@@ -566,6 +605,7 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
     BoardgameCalcPlayer me,
     BoardgameCalcPlayer target,
   ) {
+    BoardgameAudio.playModal();
     showBoardgameRenameModal(
       context,
       targetPlayer: target,
@@ -579,6 +619,7 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
 
   void _openSettingsModal(
       BoardgameCalcController c, BoardgameCalcRoom room) {
+    BoardgameAudio.playModal();
     showBoardgameSettingsModal(
       context,
       settings: room.settings,
@@ -589,6 +630,7 @@ class _BoardgameCalcHomePageState extends State<BoardgameCalcHomePage> {
   }
 
   void _openLogModal(BoardgameCalcController c, BoardgameCalcRoom room) {
+    BoardgameAudio.playModal();
     showBoardgameLogFeedModal(
       context,
       logs: c.gameLogs,
