@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../models/boardgame_models.dart';
+import '../services/lobby_bgm_service.dart';
 import '../state/boardgame_calc_controller.dart';
 import '../theme/boardgame_theme.dart';
 import 'confirm_modal.dart';
@@ -232,6 +233,11 @@ class _BoardgameCalcLobbyState extends State<BoardgameCalcLobby> {
                 ],
               ),
             ),
+
+            const SizedBox(height: 10),
+
+            // 0-1. 로비 BGM 컨트롤 바 (assets/audio/lobby_bgm.mp3)
+            _LobbyBgmBar(controller: c),
 
             const SizedBox(height: 14),
 
@@ -1214,6 +1220,176 @@ class _LobbyRuleCard extends StatelessWidget {
             ),
           ],
         ),
+      ),
+    );
+  }
+}
+
+class _LobbyBgmBar extends StatelessWidget {
+  const _LobbyBgmBar({required this.controller});
+
+  final BoardgameCalcController controller;
+
+  @override
+  Widget build(BuildContext context) {
+    final c = controller;
+    final status = c.bgmStatus;
+    final enabled = c.bgmEnabled;
+
+    final String statusLabel;
+    final Color statusBg;
+    final Color statusBorder;
+    final Color statusFg;
+    switch (status) {
+      case LobbyBgmStatus.playing:
+        statusLabel = '재생 중';
+        statusBg = BoardgameColors.emeraldBg;
+        statusBorder = BoardgameColors.emeraldBorder;
+        statusFg = BoardgameColors.emeraldText;
+      case LobbyBgmStatus.needsUserGesture:
+        statusLabel = '▶ 클릭하여 재생';
+        statusBg = BoardgameColors.amberBright.withValues(alpha: 0.22);
+        statusBorder = BoardgameColors.gold;
+        statusFg = BoardgameColors.amberScoreText;
+      case LobbyBgmStatus.missingAsset:
+        statusLabel = '음원 미등록';
+        statusBg = BoardgameColors.canvasChipBg;
+        statusBorder = BoardgameColors.canvasBorder;
+        statusFg = BoardgameColors.inkMuted;
+      case LobbyBgmStatus.disabled:
+      case LobbyBgmStatus.pausedInGame:
+        statusLabel = '꺼짐';
+        statusBg = BoardgameColors.canvasChipBg;
+        statusBorder = BoardgameColors.canvasBorder;
+        statusFg = BoardgameColors.inkMuted;
+    }
+
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 10),
+      decoration: BoxDecoration(
+        color: BoardgameColors.canvasSurface,
+        borderRadius: BorderRadius.circular(16),
+        border: Border.all(color: BoardgameColors.canvasBorder),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Wrap(
+            spacing: 8,
+            runSpacing: 6,
+            alignment: WrapAlignment.spaceBetween,
+            crossAxisAlignment: WrapCrossAlignment.center,
+            children: [
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  Icon(
+                    enabled
+                        ? Icons.music_note_rounded
+                        : Icons.music_off_rounded,
+                    size: 16,
+                    color: enabled
+                        ? BoardgameColors.walnutPrimary
+                        : BoardgameColors.inkMuted,
+                  ),
+                  const SizedBox(width: 6),
+                  const Text(
+                    '로비 BGM',
+                    style: TextStyle(
+                      color: BoardgameColors.inkSecondary,
+                      fontWeight: FontWeight.w800,
+                      fontSize: 12,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  InkWell(
+                    onTap: status == LobbyBgmStatus.needsUserGesture
+                        ? c.resumeBgmOnGesture
+                        : null,
+                    borderRadius: BorderRadius.circular(999),
+                    child: Container(
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 8, vertical: 3),
+                      decoration: BoxDecoration(
+                        color: statusBg,
+                        borderRadius: BorderRadius.circular(999),
+                        border: Border.all(color: statusBorder),
+                      ),
+                      child: Text(
+                        statusLabel,
+                        style: TextStyle(
+                          color: statusFg,
+                          fontWeight: FontWeight.w800,
+                          fontSize: 10.5,
+                        ),
+                      ),
+                    ),
+                  ),
+                ],
+              ),
+              Row(
+                mainAxisSize: MainAxisSize.min,
+                children: [
+                  if (enabled) ...[
+                    const Icon(
+                      Icons.volume_down_rounded,
+                      size: 16,
+                      color: BoardgameColors.inkMuted,
+                    ),
+                    SizedBox(
+                      width: 100,
+                      child: SliderTheme(
+                        data: SliderTheme.of(context).copyWith(
+                          trackHeight: 3,
+                          thumbShape: const RoundSliderThumbShape(
+                            enabledThumbRadius: 6,
+                          ),
+                          overlayShape: const RoundSliderOverlayShape(
+                            overlayRadius: 12,
+                          ),
+                        ),
+                        child: Slider(
+                          value: c.bgmVolume,
+                          min: 0.0,
+                          max: 1.0,
+                          activeColor: BoardgameColors.walnutPrimary,
+                          inactiveColor: BoardgameColors.canvasBorder,
+                          onChanged: (v) => c.setBgmVolume(v),
+                        ),
+                      ),
+                    ),
+                    Text(
+                      '${(c.bgmVolume * 100).round()}%',
+                      style: const TextStyle(
+                        color: BoardgameColors.inkMuted,
+                        fontFamily: 'monospace',
+                        fontWeight: FontWeight.w700,
+                        fontSize: 10.5,
+                      ),
+                    ),
+                    const SizedBox(width: 8),
+                  ],
+                  _ModeSwitchPill(
+                    label: enabled ? 'BGM ON' : 'BGM OFF',
+                    active: enabled,
+                    onTap: () => c.toggleBgm(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+          if (enabled && status == LobbyBgmStatus.missingAsset) ...[
+            const SizedBox(height: 6),
+            const Text(
+              'assets/audio/lobby_bgm.mp3 파일을 추가하면 로비 배경음악이 자동 루프 재생됩니다.',
+              style: TextStyle(
+                color: BoardgameColors.inkMuted,
+                fontSize: 11,
+                fontWeight: FontWeight.w600,
+              ),
+            ),
+          ],
+        ],
       ),
     );
   }

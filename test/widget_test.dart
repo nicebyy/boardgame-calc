@@ -163,4 +163,20 @@ void main() {
     expect(controller.room!.players[0].points, 1500);
     expect(controller.room!.players[1].points, 2500);
   });
+
+  testWidgets('Lobby BGM control bar displays missingAsset hint and toggles ON/OFF',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(tester);
+
+    expect(find.text('로비 BGM'), findsOneWidget);
+    expect(find.text('음원 미등록'), findsOneWidget);
+    expect(find.text('BGM ON'), findsOneWidget);
+
+    await tester.tap(find.text('BGM ON'));
+    await tester.pumpAndSettle();
+
+    expect(controller.bgmEnabled, isFalse);
+    expect(find.text('BGM OFF'), findsOneWidget);
+    expect(find.text('꺼짐'), findsOneWidget);
+  });
 }
