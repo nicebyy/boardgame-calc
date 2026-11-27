@@ -3,6 +3,8 @@ import 'package:boardgame_calc/models/boardgame_models.dart';
 import 'package:boardgame_calc/services/boardgame_audio.dart';
 import 'package:boardgame_calc/services/lobby_bgm_service.dart';
 import 'package:boardgame_calc/state/boardgame_calc_controller.dart';
+import 'package:boardgame_calc/theme/boardgame_theme.dart';
+import 'package:boardgame_calc/widgets/bottom_me_panel.dart';
 import 'package:boardgame_calc/widgets/middle_board_panel.dart';
 import 'package:boardgame_calc/widgets/top_players_bar.dart';
 import 'package:flutter/services.dart';
@@ -261,5 +263,30 @@ void main() {
     expect(controller.room!.centerTool, CenterToolType.empty);
     final middleRect = tester.getRect(find.byType(BoardgameCalcMiddleAuction));
     expect(middleRect.top, lessThan(140));
+  });
+
+  testWidgets('BottomMePanel uses warm light thin wood-board theme regardless of avatar color',
+      (WidgetTester tester) async {
+    final controller = await pumpInitializedApp(tester);
+    controller.createRoom(nickname: '우드테스터', title: '우드톤 테스트방');
+    await tester.pumpAndSettle();
+
+    final bottomContainerFinder = find
+        .descendant(
+          of: find.byType(BoardgameCalcBottomMe),
+          matching: find.byType(Container),
+        )
+        .first;
+    final container = tester.widget<Container>(bottomContainerFinder);
+    final decoration = container.decoration! as BoxDecoration;
+    final gradient = decoration.gradient! as LinearGradient;
+    expect(gradient.colors, const [
+      BoardgameColors.lightWoodTop,
+      BoardgameColors.lightWoodMid,
+      BoardgameColors.lightWoodEdge,
+    ]);
+    final border = decoration.border! as Border;
+    expect(border.top.color, BoardgameColors.lightWoodBorder);
+    expect(border.top.width, 1.2);
   });
 }
