@@ -41,6 +41,27 @@ class BoardgameAudio {
     impl.playCoinSound(active);
   }
 
+  static void playBetChipSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('bet_chip');
+    impl.playBetChipSound(active);
+  }
+
+  static void playBidCoinSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('bid_coin');
+    impl.playBidCoinSound(active);
+  }
+
+  static void playRefundSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('refund');
+    impl.playRefundSound(active);
+  }
+
   static void playTransferSound({bool? enabled}) {
     final active = _resolve(enabled);
     if (!active) return;
@@ -81,6 +102,13 @@ class BoardgameAudio {
     if (!active) return;
     debugObserver?.call('secret_reveal');
     impl.playSecretNoteRevealSound(active);
+  }
+
+  static void playSecretNoteWriteSound({bool? enabled}) {
+    final active = _resolve(enabled);
+    if (!active) return;
+    debugObserver?.call('secret_write');
+    impl.playSecretNoteWriteSound(active);
   }
 
   static void playSecretNoteLockSound({bool? enabled}) {

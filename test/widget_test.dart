@@ -288,5 +288,8 @@ void main() {
     final border = decoration.border! as Border;
     expect(border.top.color, BoardgameColors.lightWoodBorder);
     expect(border.top.width, 1.2);
+
+    final hostText = tester.widget<Text>(find.text('방장'));
+    expect(hostText.style?.color, const Color(0xFF6E3A06));
   });
 }

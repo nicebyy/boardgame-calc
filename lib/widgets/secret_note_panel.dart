@@ -3,6 +3,7 @@ import 'dart:async';
 import 'package:material_ui/material_ui.dart';
 
 import '../models/boardgame_models.dart';
+import '../services/boardgame_audio.dart';
 import '../theme/boardgame_theme.dart';
 import 'player_avatar.dart';
 
@@ -139,6 +140,11 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
   void _saveMyNote({bool foldAfterSave = false}) {
     if (widget.secretNote?.isLocked == true) return;
     final nextFold = foldAfterSave ? true : _isMyScreenCovered;
+    if (foldAfterSave) {
+      BoardgameAudio.playSecretNoteFoldSound();
+    } else {
+      BoardgameAudio.playSecretNoteWriteSound();
+    }
     widget.onUpdateSecretNote(_noteCtrl.text, isFolded: nextFold);
     setState(() {
       _isSaved = true;
@@ -307,8 +313,10 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                   if (widget.isHost) ...[
                     if (!isStarted)
                       ElevatedButton.icon(
-                        onPressed: () => setState(
-                            () => _showStartConfig = !_showStartConfig),
+                        onPressed: () {
+                          BoardgameAudio.playModal();
+                          setState(() => _showStartConfig = !_showStartConfig);
+                        },
                         icon: const Icon(Icons.auto_awesome, size: 14),
                         label: const Text('비밀노트 시작',
                             style: TextStyle(
@@ -384,6 +392,7 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                   if (isRevealed) ...[
                     OutlinedButton(
                       onPressed: () {
+                        BoardgameAudio.playSecretNoteRevealSound();
                         setState(() {
                           _openedNoteIds.addAll(widget.players.map((p) => p.id));
                         });
@@ -406,7 +415,10 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                               fontWeight: FontWeight.w800, fontSize: 11)),
                     ),
                     OutlinedButton(
-                      onPressed: () => setState(() => _openedNoteIds.clear()),
+                      onPressed: () {
+                        BoardgameAudio.playSecretNoteFoldSound();
+                        setState(() => _openedNoteIds.clear());
+                      },
                       style: OutlinedButton.styleFrom(
                         backgroundColor: BoardgameColors.walnutSurface,
                         foregroundColor: BoardgameColors.creamSubtle,
@@ -494,7 +506,10 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                     children: [30, 60, 90, 120, 0].map((t) {
                       final active = _startTimeLimit == t;
                       return InkWell(
-                        onTap: () => setState(() => _startTimeLimit = t),
+                        onTap: () {
+                          BoardgameAudio.playTab();
+                          setState(() => _startTimeLimit = t);
+                        },
                         borderRadius: BorderRadius.circular(8),
                         child: Container(
                           padding: const EdgeInsets.symmetric(
@@ -541,8 +556,10 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                             ),
                           ),
                           value: _startAutoReveal,
-                          onChanged: (v) =>
-                              setState(() => _startAutoReveal = v ?? true),
+                          onChanged: (v) {
+                            BoardgameAudio.playTab();
+                            setState(() => _startAutoReveal = v ?? true);
+                          },
                         ),
                       ),
                       ElevatedButton(
@@ -604,6 +621,11 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                       OutlinedButton.icon(
                         onPressed: () {
                           final next = !_isMyScreenCovered;
+                          if (next) {
+                            BoardgameAudio.playSecretNoteFoldSound();
+                          } else {
+                            BoardgameAudio.playSecretNoteRevealSound();
+                          }
                           setState(() => _isMyScreenCovered = next);
                           if (!isLocked) {
                             widget.onUpdateSecretNote(_noteCtrl.text,
@@ -644,7 +666,14 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                   const SizedBox(height: 8),
                   if (_isMyScreenCovered)
                     InkWell(
-                      onTap: () => setState(() => _isMyScreenCovered = false),
+                      onTap: () {
+                        BoardgameAudio.playSecretNoteRevealSound();
+                        setState(() => _isMyScreenCovered = false);
+                        if (!isLocked) {
+                          widget.onUpdateSecretNote(_noteCtrl.text,
+                              isFolded: false);
+                        }
+                      },
                       borderRadius: BorderRadius.circular(12),
                       child: Container(
                         width: double.infinity,
@@ -824,11 +853,17 @@ class _BoardgameCalcSecretNoteState extends State<BoardgameCalcSecretNote> {
                     child: InkWell(
                       onTap: isRevealed
                           ? () {
+                              final opening = !_openedNoteIds.contains(p.id);
+                              if (opening) {
+                                BoardgameAudio.playSecretNoteRevealSound();
+                              } else {
+                                BoardgameAudio.playSecretNoteFoldSound();
+                              }
                               setState(() {
-                                if (_openedNoteIds.contains(p.id)) {
-                                  _openedNoteIds.remove(p.id);
-                                } else {
+                                if (opening) {
                                   _openedNoteIds.add(p.id);
+                                } else {
+                                  _openedNoteIds.remove(p.id);
                                 }
                               });
                             }

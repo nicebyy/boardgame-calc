@@ -1,6 +1,7 @@
 import 'package:material_ui/material_ui.dart';
 
 import '../../models/boardgame_models.dart';
+import '../../services/boardgame_audio.dart';
 import '../../theme/boardgame_theme.dart';
 import '../confirm_modal.dart';
 
@@ -93,52 +94,66 @@ class _SettingsDialogState extends State<_SettingsDialog> {
     super.dispose();
   }
 
-  void _apply(BoardgameCalcSettings next) {
+  void _apply(BoardgameCalcSettings next, {bool playSfx = true}) {
+    if (playSfx) {
+      BoardgameAudio.playTab();
+    }
     setState(() => _settings = next);
     widget.onUpdateSettings(next);
   }
 
   void _addCurrencyDenom(int value, int? maxCount) {
     if (value == 0) return;
+    BoardgameAudio.playClick();
     final cleanMax = (maxCount != null && maxCount > 0) ? maxCount : null;
     final list = [
       ..._settings.effectiveCurrencyDenoms.where((d) => d.value != value),
       BoardgameCalcDenomination(
           value: value, maxCount: cleanMax, remainingCount: cleanMax),
     ]..sort((a, b) => a.value.abs().compareTo(b.value.abs()));
-    _apply(_settings.copyWith(
-      currencyDenominations: list,
-      quickAdjustUnits: list.map((d) => d.value).toList(),
-    ));
+    _apply(
+      _settings.copyWith(
+        currencyDenominations: list,
+        quickAdjustUnits: list.map((d) => d.value).toList(),
+      ),
+      playSfx: false,
+    );
   }
 
   void _removeCurrencyDenom(int value) {
+    BoardgameAudio.playClick();
     final list =
         _settings.effectiveCurrencyDenoms.where((d) => d.value != value).toList();
-    _apply(_settings.copyWith(
-      currencyDenominations: list,
-      quickAdjustUnits: list.map((d) => d.value).toList(),
-    ));
+    _apply(
+      _settings.copyWith(
+        currencyDenominations: list,
+        quickAdjustUnits: list.map((d) => d.value).toList(),
+      ),
+      playSfx: false,
+    );
   }
 
   void _addScoreDenom(int value, int? maxCount) {
     if (value == 0) return;
+    BoardgameAudio.playClick();
     final cleanMax = (maxCount != null && maxCount > 0) ? maxCount : null;
     final list = [
       ..._settings.scoreDenominations.where((d) => d.value != value),
       BoardgameCalcDenomination(
           value: value, maxCount: cleanMax, remainingCount: cleanMax),
     ]..sort((a, b) => a.value.abs().compareTo(b.value.abs()));
-    _apply(_settings.copyWith(scoreDenominations: list));
+    _apply(_settings.copyWith(scoreDenominations: list), playSfx: false);
   }
 
   void _removeScoreDenom(int value) {
+    BoardgameAudio.playClick();
     final list =
         _settings.scoreDenominations.where((d) => d.value != value).toList();
-    _apply(_settings.copyWith(scoreDenominations: list));
+    _apply(_settings.copyWith(scoreDenominations: list), playSfx: false);
   }
 
   Future<void> _confirmResetPoints() async {
+    BoardgameAudio.playClick();
     final amount = int.tryParse(_resetPointsCtrl.text.trim()) ??
         _settings.initialPoints;
     final ok = await showBoardgameConfirmDialog(
@@ -151,12 +166,14 @@ class _SettingsDialogState extends State<_SettingsDialog> {
       type: ConfirmDialogType.danger,
     );
     if (ok == true) {
+      BoardgameAudio.playClick();
       widget.onResetPoints(amount);
       if (mounted) Navigator.of(context).pop();
     }
   }
 
   Future<void> _confirmResetScores() async {
+    BoardgameAudio.playClick();
     final score =
         int.tryParse(_resetScoreCtrl.text.trim()) ?? _settings.initialScore;
     final ok = await showBoardgameConfirmDialog(
@@ -168,6 +185,7 @@ class _SettingsDialogState extends State<_SettingsDialog> {
       type: ConfirmDialogType.danger,
     );
     if (ok == true) {
+      BoardgameAudio.playClick();
       widget.onResetScores(score);
       if (mounted) Navigator.of(context).pop();
     }
@@ -245,7 +263,10 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                     ),
                   ),
                   IconButton(
-                    onPressed: () => Navigator.of(context).pop(),
+                    onPressed: () {
+                      BoardgameAudio.playClick();
+                      Navigator.of(context).pop();
+                    },
                     icon: const Icon(Icons.close,
                         color: BoardgameColors.gold, size: 20),
                   ),
@@ -499,7 +520,10 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                             onChanged: (v) {
                               final t = v.trim();
                               if (t.isNotEmpty) {
-                                _apply(_settings.copyWith(currencyUnit: t));
+                                _apply(
+                                  _settings.copyWith(currencyUnit: t),
+                                  playSfx: false,
+                                );
                               }
                             },
                             decoration: InputDecoration(
@@ -692,7 +716,10 @@ class _SettingsDialogState extends State<_SettingsDialog> {
                                 onChanged: (v) {
                                   final n = int.tryParse(v.trim());
                                   if (n != null && n > 0) {
-                                    _apply(_settings.copyWith(auctionMinBid: n));
+                                    _apply(
+                                      _settings.copyWith(auctionMinBid: n),
+                                      playSfx: false,
+                                    );
                                   }
                                 },
                                 decoration: _walnutInputDeco(
@@ -1066,7 +1093,10 @@ class _SettingsDialogState extends State<_SettingsDialog> {
               SizedBox(
                 width: double.infinity,
                 child: OutlinedButton(
-                  onPressed: () => Navigator.of(context).pop(),
+                  onPressed: () {
+                      BoardgameAudio.playClick();
+                      Navigator.of(context).pop();
+                    },
                   style: OutlinedButton.styleFrom(
                     backgroundColor: BoardgameColors.walnutCard,
                     foregroundColor: BoardgameColors.creamText,
